@@ -60,7 +60,12 @@ export function App() {
       <section className="workspace">
         <aside className="sidebar">
           <p className="side-label">当前项目</p>
-          <select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
+          <select value={projectId} onChange={(e) => {
+            const next = e.target.value;
+            setProjectId(next);
+            setQuestion(next === "paper-moon" ? "线索PAPER-MOON-01出现在哪里，与什么道具有关？" : examples[0]);
+            setResult(null);
+          }}>
             {projects.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
           </select>
           <p className="project-logline">{project?.logline}</p>
@@ -114,4 +119,3 @@ export function App() {
     <footer className="page-footer"><span>ScriptGraph · Evidence before generation</span><span>Dai Zhouchen · 2026</span></footer>
   </div>;
 }
-
