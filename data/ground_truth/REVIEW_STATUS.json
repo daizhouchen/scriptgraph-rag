@@ -1,0 +1,7 @@
+{
+  "status": "pending_user_review",
+  "instructions": "逐条核对 question、relevant_scene_ids 与 conflict scene_ids；确认后将条目状态改为 confirmed。",
+  "question_count": 180,
+  "conflict_count": 48,
+  "random_seed": 20260918
+}

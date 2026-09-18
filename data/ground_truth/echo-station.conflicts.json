@@ -1,0 +1,122 @@
+[
+  {
+    "id": "conflict-echo-station-alias-1",
+    "category": "alias",
+    "summary": "林岚 的公开称谓存在冲突",
+    "scene_ids": [
+      "echo-station-s02",
+      "echo-station-s03"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-alias-2",
+    "category": "alias",
+    "summary": "周砚 的公开称谓存在冲突",
+    "scene_ids": [
+      "echo-station-s04",
+      "echo-station-s05"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-alias-3",
+    "category": "alias",
+    "summary": "陈姨 的公开称谓存在冲突",
+    "scene_ids": [
+      "echo-station-s06",
+      "echo-station-s07"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-knowledge-1",
+    "category": "knowledge",
+    "summary": "林岚 的零点录音存在冲突",
+    "scene_ids": [
+      "echo-station-s08",
+      "echo-station-s09"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-knowledge-2",
+    "category": "knowledge",
+    "summary": "周砚 的零点录音存在冲突",
+    "scene_ids": [
+      "echo-station-s10",
+      "echo-station-s11"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-knowledge-3",
+    "category": "knowledge",
+    "summary": "陈姨 的零点录音存在冲突",
+    "scene_ids": [
+      "echo-station-s12",
+      "echo-station-s13"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-prop-1",
+    "category": "prop",
+    "summary": "银色录音带 的持有者存在冲突",
+    "scene_ids": [
+      "echo-station-s14",
+      "echo-station-s15"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-prop-2",
+    "category": "prop",
+    "summary": "黄铜钥匙 的持有者存在冲突",
+    "scene_ids": [
+      "echo-station-s16",
+      "echo-station-s17"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-prop-3",
+    "category": "prop",
+    "summary": "值班日志 的持有者存在冲突",
+    "scene_ids": [
+      "echo-station-s18",
+      "echo-station-s19"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-timeline-1",
+    "category": "timeline",
+    "summary": "关键事件1 的发生顺序存在冲突",
+    "scene_ids": [
+      "echo-station-s20",
+      "echo-station-s21"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-timeline-2",
+    "category": "timeline",
+    "summary": "关键事件2 的发生顺序存在冲突",
+    "scene_ids": [
+      "echo-station-s22",
+      "echo-station-s23"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-timeline-3",
+    "category": "timeline",
+    "summary": "关键事件3 的发生顺序存在冲突",
+    "scene_ids": [
+      "echo-station-s24",
+      "echo-station-s25"
+    ],
+    "review_status": "pending_user_review"
+  }
+]

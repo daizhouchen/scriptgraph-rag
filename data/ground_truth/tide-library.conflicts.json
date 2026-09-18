@@ -1,0 +1,122 @@
+[
+  {
+    "id": "conflict-tide-library-alias-1",
+    "category": "alias",
+    "summary": "季遥 的公开称谓存在冲突",
+    "scene_ids": [
+      "tide-library-s02",
+      "tide-library-s03"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-alias-2",
+    "category": "alias",
+    "summary": "程屿 的公开称谓存在冲突",
+    "scene_ids": [
+      "tide-library-s04",
+      "tide-library-s05"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-alias-3",
+    "category": "alias",
+    "summary": "叶馆长 的公开称谓存在冲突",
+    "scene_ids": [
+      "tide-library-s06",
+      "tide-library-s07"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-knowledge-1",
+    "category": "knowledge",
+    "summary": "季遥 的第十三书架存在冲突",
+    "scene_ids": [
+      "tide-library-s08",
+      "tide-library-s09"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-knowledge-2",
+    "category": "knowledge",
+    "summary": "程屿 的第十三书架存在冲突",
+    "scene_ids": [
+      "tide-library-s10",
+      "tide-library-s11"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-knowledge-3",
+    "category": "knowledge",
+    "summary": "叶馆长 的第十三书架存在冲突",
+    "scene_ids": [
+      "tide-library-s12",
+      "tide-library-s13"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-prop-1",
+    "category": "prop",
+    "summary": "潮汐地图 的持有者存在冲突",
+    "scene_ids": [
+      "tide-library-s14",
+      "tide-library-s15"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-prop-2",
+    "category": "prop",
+    "summary": "蓝墨水瓶 的持有者存在冲突",
+    "scene_ids": [
+      "tide-library-s16",
+      "tide-library-s17"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-prop-3",
+    "category": "prop",
+    "summary": "借阅卡 的持有者存在冲突",
+    "scene_ids": [
+      "tide-library-s18",
+      "tide-library-s19"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-timeline-1",
+    "category": "timeline",
+    "summary": "关键事件1 的发生顺序存在冲突",
+    "scene_ids": [
+      "tide-library-s20",
+      "tide-library-s21"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-timeline-2",
+    "category": "timeline",
+    "summary": "关键事件2 的发生顺序存在冲突",
+    "scene_ids": [
+      "tide-library-s22",
+      "tide-library-s23"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-timeline-3",
+    "category": "timeline",
+    "summary": "关键事件3 的发生顺序存在冲突",
+    "scene_ids": [
+      "tide-library-s24",
+      "tide-library-s25"
+    ],
+    "review_status": "pending_user_review"
+  }
+]

@@ -1,0 +1,122 @@
+[
+  {
+    "id": "conflict-northbound-alias-1",
+    "category": "alias",
+    "summary": "沈川 的公开称谓存在冲突",
+    "scene_ids": [
+      "northbound-s02",
+      "northbound-s03"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-alias-2",
+    "category": "alias",
+    "summary": "闻溪 的公开称谓存在冲突",
+    "scene_ids": [
+      "northbound-s04",
+      "northbound-s05"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-alias-3",
+    "category": "alias",
+    "summary": "罗叔 的公开称谓存在冲突",
+    "scene_ids": [
+      "northbound-s06",
+      "northbound-s07"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-knowledge-1",
+    "category": "knowledge",
+    "summary": "沈川 的空白站名存在冲突",
+    "scene_ids": [
+      "northbound-s08",
+      "northbound-s09"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-knowledge-2",
+    "category": "knowledge",
+    "summary": "闻溪 的空白站名存在冲突",
+    "scene_ids": [
+      "northbound-s10",
+      "northbound-s11"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-knowledge-3",
+    "category": "knowledge",
+    "summary": "罗叔 的空白站名存在冲突",
+    "scene_ids": [
+      "northbound-s12",
+      "northbound-s13"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-prop-1",
+    "category": "prop",
+    "summary": "黑色车票 的持有者存在冲突",
+    "scene_ids": [
+      "northbound-s14",
+      "northbound-s15"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-prop-2",
+    "category": "prop",
+    "summary": "银怀表 的持有者存在冲突",
+    "scene_ids": [
+      "northbound-s16",
+      "northbound-s17"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-prop-3",
+    "category": "prop",
+    "summary": "乘客名单 的持有者存在冲突",
+    "scene_ids": [
+      "northbound-s18",
+      "northbound-s19"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-timeline-1",
+    "category": "timeline",
+    "summary": "关键事件1 的发生顺序存在冲突",
+    "scene_ids": [
+      "northbound-s20",
+      "northbound-s21"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-timeline-2",
+    "category": "timeline",
+    "summary": "关键事件2 的发生顺序存在冲突",
+    "scene_ids": [
+      "northbound-s22",
+      "northbound-s23"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-timeline-3",
+    "category": "timeline",
+    "summary": "关键事件3 的发生顺序存在冲突",
+    "scene_ids": [
+      "northbound-s24",
+      "northbound-s25"
+    ],
+    "review_status": "pending_user_review"
+  }
+]

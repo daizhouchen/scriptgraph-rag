@@ -1,0 +1,482 @@
+[
+  {
+    "id": "conflict-echo-station-alias-1",
+    "category": "alias",
+    "summary": "林岚 的公开称谓存在冲突",
+    "scene_ids": [
+      "echo-station-s02",
+      "echo-station-s03"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-alias-2",
+    "category": "alias",
+    "summary": "周砚 的公开称谓存在冲突",
+    "scene_ids": [
+      "echo-station-s04",
+      "echo-station-s05"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-alias-3",
+    "category": "alias",
+    "summary": "陈姨 的公开称谓存在冲突",
+    "scene_ids": [
+      "echo-station-s06",
+      "echo-station-s07"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-knowledge-1",
+    "category": "knowledge",
+    "summary": "林岚 的零点录音存在冲突",
+    "scene_ids": [
+      "echo-station-s08",
+      "echo-station-s09"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-knowledge-2",
+    "category": "knowledge",
+    "summary": "周砚 的零点录音存在冲突",
+    "scene_ids": [
+      "echo-station-s10",
+      "echo-station-s11"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-knowledge-3",
+    "category": "knowledge",
+    "summary": "陈姨 的零点录音存在冲突",
+    "scene_ids": [
+      "echo-station-s12",
+      "echo-station-s13"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-prop-1",
+    "category": "prop",
+    "summary": "银色录音带 的持有者存在冲突",
+    "scene_ids": [
+      "echo-station-s14",
+      "echo-station-s15"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-prop-2",
+    "category": "prop",
+    "summary": "黄铜钥匙 的持有者存在冲突",
+    "scene_ids": [
+      "echo-station-s16",
+      "echo-station-s17"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-prop-3",
+    "category": "prop",
+    "summary": "值班日志 的持有者存在冲突",
+    "scene_ids": [
+      "echo-station-s18",
+      "echo-station-s19"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-timeline-1",
+    "category": "timeline",
+    "summary": "关键事件1 的发生顺序存在冲突",
+    "scene_ids": [
+      "echo-station-s20",
+      "echo-station-s21"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-timeline-2",
+    "category": "timeline",
+    "summary": "关键事件2 的发生顺序存在冲突",
+    "scene_ids": [
+      "echo-station-s22",
+      "echo-station-s23"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-echo-station-timeline-3",
+    "category": "timeline",
+    "summary": "关键事件3 的发生顺序存在冲突",
+    "scene_ids": [
+      "echo-station-s24",
+      "echo-station-s25"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-alias-1",
+    "category": "alias",
+    "summary": "苏禾 的公开称谓存在冲突",
+    "scene_ids": [
+      "paper-moon-s02",
+      "paper-moon-s03"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-alias-2",
+    "category": "alias",
+    "summary": "顾言 的公开称谓存在冲突",
+    "scene_ids": [
+      "paper-moon-s04",
+      "paper-moon-s05"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-alias-3",
+    "category": "alias",
+    "summary": "唐梨 的公开称谓存在冲突",
+    "scene_ids": [
+      "paper-moon-s06",
+      "paper-moon-s07"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-knowledge-1",
+    "category": "knowledge",
+    "summary": "苏禾 的第七码存在冲突",
+    "scene_ids": [
+      "paper-moon-s08",
+      "paper-moon-s09"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-knowledge-2",
+    "category": "knowledge",
+    "summary": "顾言 的第七码存在冲突",
+    "scene_ids": [
+      "paper-moon-s10",
+      "paper-moon-s11"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-knowledge-3",
+    "category": "knowledge",
+    "summary": "唐梨 的第七码存在冲突",
+    "scene_ids": [
+      "paper-moon-s12",
+      "paper-moon-s13"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-prop-1",
+    "category": "prop",
+    "summary": "纸月亮 的持有者存在冲突",
+    "scene_ids": [
+      "paper-moon-s14",
+      "paper-moon-s15"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-prop-2",
+    "category": "prop",
+    "summary": "场记板 的持有者存在冲突",
+    "scene_ids": [
+      "paper-moon-s16",
+      "paper-moon-s17"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-prop-3",
+    "category": "prop",
+    "summary": "旧胶片 的持有者存在冲突",
+    "scene_ids": [
+      "paper-moon-s18",
+      "paper-moon-s19"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-timeline-1",
+    "category": "timeline",
+    "summary": "关键事件1 的发生顺序存在冲突",
+    "scene_ids": [
+      "paper-moon-s20",
+      "paper-moon-s21"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-timeline-2",
+    "category": "timeline",
+    "summary": "关键事件2 的发生顺序存在冲突",
+    "scene_ids": [
+      "paper-moon-s22",
+      "paper-moon-s23"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-timeline-3",
+    "category": "timeline",
+    "summary": "关键事件3 的发生顺序存在冲突",
+    "scene_ids": [
+      "paper-moon-s24",
+      "paper-moon-s25"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-alias-1",
+    "category": "alias",
+    "summary": "沈川 的公开称谓存在冲突",
+    "scene_ids": [
+      "northbound-s02",
+      "northbound-s03"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-alias-2",
+    "category": "alias",
+    "summary": "闻溪 的公开称谓存在冲突",
+    "scene_ids": [
+      "northbound-s04",
+      "northbound-s05"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-alias-3",
+    "category": "alias",
+    "summary": "罗叔 的公开称谓存在冲突",
+    "scene_ids": [
+      "northbound-s06",
+      "northbound-s07"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-knowledge-1",
+    "category": "knowledge",
+    "summary": "沈川 的空白站名存在冲突",
+    "scene_ids": [
+      "northbound-s08",
+      "northbound-s09"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-knowledge-2",
+    "category": "knowledge",
+    "summary": "闻溪 的空白站名存在冲突",
+    "scene_ids": [
+      "northbound-s10",
+      "northbound-s11"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-knowledge-3",
+    "category": "knowledge",
+    "summary": "罗叔 的空白站名存在冲突",
+    "scene_ids": [
+      "northbound-s12",
+      "northbound-s13"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-prop-1",
+    "category": "prop",
+    "summary": "黑色车票 的持有者存在冲突",
+    "scene_ids": [
+      "northbound-s14",
+      "northbound-s15"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-prop-2",
+    "category": "prop",
+    "summary": "银怀表 的持有者存在冲突",
+    "scene_ids": [
+      "northbound-s16",
+      "northbound-s17"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-prop-3",
+    "category": "prop",
+    "summary": "乘客名单 的持有者存在冲突",
+    "scene_ids": [
+      "northbound-s18",
+      "northbound-s19"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-timeline-1",
+    "category": "timeline",
+    "summary": "关键事件1 的发生顺序存在冲突",
+    "scene_ids": [
+      "northbound-s20",
+      "northbound-s21"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-timeline-2",
+    "category": "timeline",
+    "summary": "关键事件2 的发生顺序存在冲突",
+    "scene_ids": [
+      "northbound-s22",
+      "northbound-s23"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-northbound-timeline-3",
+    "category": "timeline",
+    "summary": "关键事件3 的发生顺序存在冲突",
+    "scene_ids": [
+      "northbound-s24",
+      "northbound-s25"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-alias-1",
+    "category": "alias",
+    "summary": "季遥 的公开称谓存在冲突",
+    "scene_ids": [
+      "tide-library-s02",
+      "tide-library-s03"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-alias-2",
+    "category": "alias",
+    "summary": "程屿 的公开称谓存在冲突",
+    "scene_ids": [
+      "tide-library-s04",
+      "tide-library-s05"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-alias-3",
+    "category": "alias",
+    "summary": "叶馆长 的公开称谓存在冲突",
+    "scene_ids": [
+      "tide-library-s06",
+      "tide-library-s07"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-knowledge-1",
+    "category": "knowledge",
+    "summary": "季遥 的第十三书架存在冲突",
+    "scene_ids": [
+      "tide-library-s08",
+      "tide-library-s09"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-knowledge-2",
+    "category": "knowledge",
+    "summary": "程屿 的第十三书架存在冲突",
+    "scene_ids": [
+      "tide-library-s10",
+      "tide-library-s11"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-knowledge-3",
+    "category": "knowledge",
+    "summary": "叶馆长 的第十三书架存在冲突",
+    "scene_ids": [
+      "tide-library-s12",
+      "tide-library-s13"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-prop-1",
+    "category": "prop",
+    "summary": "潮汐地图 的持有者存在冲突",
+    "scene_ids": [
+      "tide-library-s14",
+      "tide-library-s15"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-prop-2",
+    "category": "prop",
+    "summary": "蓝墨水瓶 的持有者存在冲突",
+    "scene_ids": [
+      "tide-library-s16",
+      "tide-library-s17"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-prop-3",
+    "category": "prop",
+    "summary": "借阅卡 的持有者存在冲突",
+    "scene_ids": [
+      "tide-library-s18",
+      "tide-library-s19"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-timeline-1",
+    "category": "timeline",
+    "summary": "关键事件1 的发生顺序存在冲突",
+    "scene_ids": [
+      "tide-library-s20",
+      "tide-library-s21"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-timeline-2",
+    "category": "timeline",
+    "summary": "关键事件2 的发生顺序存在冲突",
+    "scene_ids": [
+      "tide-library-s22",
+      "tide-library-s23"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-tide-library-timeline-3",
+    "category": "timeline",
+    "summary": "关键事件3 的发生顺序存在冲突",
+    "scene_ids": [
+      "tide-library-s24",
+      "tide-library-s25"
+    ],
+    "review_status": "pending_user_review"
+  }
+]

@@ -1,0 +1,29 @@
+{
+  "license": "CC BY 4.0",
+  "projects": [
+    {
+      "id": "echo-station",
+      "title": "回声站",
+      "logline": "暴雨封锁的山城广播站里，一名实习记者追查二十年前失踪的最后一段录音。",
+      "demo_enabled": true
+    },
+    {
+      "id": "paper-moon",
+      "title": "纸月亮",
+      "logline": "道具师在停拍的电影棚中发现一轮会记录演员记忆的纸月亮。",
+      "demo_enabled": true
+    },
+    {
+      "id": "northbound",
+      "title": "北行列车",
+      "logline": "一趟没有终点站的夜车上，检票员发现乘客名单每天都会少一个名字。",
+      "demo_enabled": false
+    },
+    {
+      "id": "tide-library",
+      "title": "潮汐图书馆",
+      "logline": "海水倒灌前夜，修复师必须从会改写内容的藏书中找回城市的真实地图。",
+      "demo_enabled": false
+    }
+  ]
+}

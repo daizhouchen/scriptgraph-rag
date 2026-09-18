@@ -1,0 +1,122 @@
+[
+  {
+    "id": "conflict-paper-moon-alias-1",
+    "category": "alias",
+    "summary": "苏禾 的公开称谓存在冲突",
+    "scene_ids": [
+      "paper-moon-s02",
+      "paper-moon-s03"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-alias-2",
+    "category": "alias",
+    "summary": "顾言 的公开称谓存在冲突",
+    "scene_ids": [
+      "paper-moon-s04",
+      "paper-moon-s05"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-alias-3",
+    "category": "alias",
+    "summary": "唐梨 的公开称谓存在冲突",
+    "scene_ids": [
+      "paper-moon-s06",
+      "paper-moon-s07"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-knowledge-1",
+    "category": "knowledge",
+    "summary": "苏禾 的第七码存在冲突",
+    "scene_ids": [
+      "paper-moon-s08",
+      "paper-moon-s09"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-knowledge-2",
+    "category": "knowledge",
+    "summary": "顾言 的第七码存在冲突",
+    "scene_ids": [
+      "paper-moon-s10",
+      "paper-moon-s11"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-knowledge-3",
+    "category": "knowledge",
+    "summary": "唐梨 的第七码存在冲突",
+    "scene_ids": [
+      "paper-moon-s12",
+      "paper-moon-s13"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-prop-1",
+    "category": "prop",
+    "summary": "纸月亮 的持有者存在冲突",
+    "scene_ids": [
+      "paper-moon-s14",
+      "paper-moon-s15"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-prop-2",
+    "category": "prop",
+    "summary": "场记板 的持有者存在冲突",
+    "scene_ids": [
+      "paper-moon-s16",
+      "paper-moon-s17"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-prop-3",
+    "category": "prop",
+    "summary": "旧胶片 的持有者存在冲突",
+    "scene_ids": [
+      "paper-moon-s18",
+      "paper-moon-s19"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-timeline-1",
+    "category": "timeline",
+    "summary": "关键事件1 的发生顺序存在冲突",
+    "scene_ids": [
+      "paper-moon-s20",
+      "paper-moon-s21"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-timeline-2",
+    "category": "timeline",
+    "summary": "关键事件2 的发生顺序存在冲突",
+    "scene_ids": [
+      "paper-moon-s22",
+      "paper-moon-s23"
+    ],
+    "review_status": "pending_user_review"
+  },
+  {
+    "id": "conflict-paper-moon-timeline-3",
+    "category": "timeline",
+    "summary": "关键事件3 的发生顺序存在冲突",
+    "scene_ids": [
+      "paper-moon-s24",
+      "paper-moon-s25"
+    ],
+    "review_status": "pending_user_review"
+  }
+]

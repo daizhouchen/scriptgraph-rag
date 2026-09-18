@@ -1,0 +1,98 @@
+{
+  "bm25": {
+    "single_hop": {
+      "count": 60,
+      "recall_at_5": 1.0,
+      "mrr": 1.0
+    },
+    "multi_hop": {
+      "count": 60,
+      "recall_at_5": 0.8833,
+      "mrr": 1.0
+    },
+    "temporal_state": {
+      "count": 28,
+      "recall_at_5": 1.0,
+      "mrr": 0.9345
+    },
+    "unanswerable": {
+      "count": 32,
+      "refusal_rate": 1.0
+    },
+    "citation_precision_at_1": 0.9797
+  },
+  "dense": {
+    "single_hop": {
+      "count": 60,
+      "recall_at_5": 0.6833,
+      "mrr": 0.5664
+    },
+    "multi_hop": {
+      "count": 60,
+      "recall_at_5": 0.7917,
+      "mrr": 0.7875
+    },
+    "temporal_state": {
+      "count": 28,
+      "recall_at_5": 0.0,
+      "mrr": 0.0
+    },
+    "unanswerable": {
+      "count": 32,
+      "refusal_rate": 1.0
+    },
+    "citation_precision_at_1": 0.4662
+  },
+  "hybrid": {
+    "single_hop": {
+      "count": 60,
+      "recall_at_5": 1.0,
+      "mrr": 1.0
+    },
+    "multi_hop": {
+      "count": 60,
+      "recall_at_5": 0.8583,
+      "mrr": 1.0
+    },
+    "temporal_state": {
+      "count": 28,
+      "recall_at_5": 1.0,
+      "mrr": 0.9345
+    },
+    "unanswerable": {
+      "count": 32,
+      "refusal_rate": 1.0
+    },
+    "citation_precision_at_1": 0.9797
+  },
+  "graph": {
+    "single_hop": {
+      "count": 60,
+      "recall_at_5": 1.0,
+      "mrr": 1.0
+    },
+    "multi_hop": {
+      "count": 60,
+      "recall_at_5": 1.0,
+      "mrr": 1.0
+    },
+    "temporal_state": {
+      "count": 28,
+      "recall_at_5": 1.0,
+      "mrr": 0.8542
+    },
+    "unanswerable": {
+      "count": 32,
+      "refusal_rate": 1.0
+    },
+    "citation_precision_at_1": 0.9527
+  },
+  "consistency": {
+    "predicted": 48,
+    "ground_truth": 48,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+  },
+  "review_status": "pending_user_review"
+}

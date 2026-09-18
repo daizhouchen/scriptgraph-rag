@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+node_modules/
+web/dist/
+docs/assets/page@*.webm
+web/*.tsbuildinfo
+.env
+*.pyc
+data/private/
+artifacts/
