@@ -20,7 +20,15 @@ from .models import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
-DATA_DIR = Path(os.getenv("SCRIPTGRAPH_DATA_DIR", ROOT / "data"))
+
+
+def runtime_path(name: str) -> Path:
+    source_path = ROOT / name
+    working_path = Path.cwd() / name
+    return source_path if source_path.exists() else working_path
+
+
+DATA_DIR = Path(os.getenv("SCRIPTGRAPH_DATA_DIR", runtime_path("data")))
 DEMO_MODE = os.getenv("SCRIPTGRAPH_DEMO_MODE", "true").lower() == "true"
 
 app = FastAPI(
@@ -68,6 +76,6 @@ def impact(request: ImpactRequest) -> ImpactResponse:
     return engine.impact(request)
 
 
-STATIC_DIR = ROOT / "static"
+STATIC_DIR = runtime_path("static")
 if STATIC_DIR.exists():
     app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
