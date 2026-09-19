@@ -2,7 +2,7 @@
 
 > 剧本知识图谱与可追溯 RAG · Evidence-grounded GraphRAG for screenplay continuity
 
-[在线固定样例 Demo](https://daizhouchen.github.io/scriptgraph-rag/) · [30 秒操作视频](docs/assets/demo.webm) · [产品说明](docs/product.md) · [架构说明](docs/architecture.md)
+[在线固定样例 Demo](https://daizhouchen.github.io/scriptgraph-rag/) · [30 秒操作视频](docs/assets/demo.webm) · [数据卡](DATA_CARD.md) · [产品说明](docs/product.md) · [架构说明](docs/architecture.md)
 
 ![ScriptGraph demo](docs/assets/demo.png)
 
