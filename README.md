@@ -2,7 +2,7 @@
 
 > 剧本知识图谱与可追溯 RAG · Evidence-grounded GraphRAG for screenplay continuity
 
-[在线固定样例 Demo](https://daizhouchen.github.io/scriptgraph-rag/) · [30 秒操作视频](docs/assets/demo.webm) · [数据卡](DATA_CARD.md) · [产品说明](docs/product.md) · [架构说明](docs/architecture.md)
+[在线剧本核对工作台](https://daizhouchen.github.io/scriptgraph-rag/) · [数据卡](DATA_CARD.md) · [产品说明](docs/product.md) · [架构说明](docs/architecture.md)
 
 ![ScriptGraph demo](docs/assets/demo.png)
 
@@ -18,7 +18,9 @@ ScriptGraph 将人物、场景、道具、事件与版本组织成可追溯图�
 - 提供 BM25、确定性字符向量、混合检索、图扩展四组可复现基线。
 - 输出人物/道具关联证据、事件顺序、一致性候选和改稿影响路径。
 - FastAPI 提供 `/api/projects`、`/api/query`、`/api/consistency/check`、`/api/impact`。
-- React/Vite 固定语料 Demo 不接收文件上传，不保存用户输入；本地完整模式可导入自有剧本。
+- React/Vite 公开工作台使用两部固定原创语料，不接收文件上传，不接实时大模型。样例问题读取真实引擎预计算结果，自由输入只查找关键词候选。
+- 点击证据打开带行号的完整场次；连续性候选支持双侧原文、人工复核标记与备注、文本导出；改稿支持对象关联场次、逐场核对与清单导出。
+- 复核标记只保留在本次页面，切换剧本不会串用，刷新会清除。标记不写回原剧本或数据集的作者复核状态。改稿清单不进行剧情语义推演。
 - 4 个原创中文合成剧本，共 120 场；180 条固定问答与 48 处可控冲突。
 
 ## 系统架构
@@ -74,6 +76,17 @@ npm run dev
 ```
 
 ## 测试与评测
+
+浏览器语料快照从同一份 Fountain 原文、解析器与检索引擎生成，禁止手写另一套演示引用。更新语料或检索逻辑后重新导出：
+
+```bash
+uv run python scripts/export_demo.py
+cd web
+npm test
+npm run build
+```
+
+本地启动公开样例时设置 `VITE_STATIC_DEMO=true`；未设置时，工作台连接本地 FastAPI。源码行号、示例问题与可选对象通过 `/api/projects/{project_id}/workspace` 读取。
 
 ```bash
 uv run pytest -q

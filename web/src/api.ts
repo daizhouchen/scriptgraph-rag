@@ -3,6 +3,18 @@ export type Project = {
   scene_count: number; character_count: number; demo_enabled: boolean;
 };
 
+export type Scene = {
+  id: string; project_id: string; version: string; number: number;
+  heading: string; location: string; time_of_day: string; text: string;
+  characters: string[]; props: string[]; events: string[]; facts: string[];
+  line_start: number; line_end: number; review_status: string;
+};
+
+export type Workspace = {
+  project: Project; scenes: Scene[]; lines: string[]; examples: string[];
+  entities: string[]; corpus_hash: string;
+};
+
 export type Evidence = {
   scene_id: string; scene_number: number; heading: string; excerpt: string;
   score: number; reasons: string[]; line_start: number; line_end: number;
@@ -12,6 +24,8 @@ export type QueryResult = {
   request_id: string; elapsed_ms: number; answer: string;
   confidence: "high" | "medium" | "insufficient";
   evidences: Evidence[]; retrieval_path: string[];
+  execution?: "snapshot" | "keyword" | "backend";
+  error_type?: string | null;
 };
 
 export type Conflict = {
@@ -33,10 +47,11 @@ const request = async <T,>(path: string, init?: RequestInit): Promise<T> => {
 
 export const api = {
   projects: () => import.meta.env.VITE_STATIC_DEMO === "true" ? staticApi.projects() : request<Project[]>("/api/projects"),
-  query: (project_id: string, question: string, method: string) => import.meta.env.VITE_STATIC_DEMO === "true" ? staticApi.query(project_id, question, method) : request<QueryResult>("/api/query", {
+  workspace: (project_id: string) => import.meta.env.VITE_STATIC_DEMO === "true" ? staticApi.workspace(project_id) : request<Workspace>(`/api/projects/${encodeURIComponent(project_id)}/workspace`),
+  query: async (project_id: string, question: string, method: string): Promise<QueryResult> => import.meta.env.VITE_STATIC_DEMO === "true" ? staticApi.query(project_id, question, method) : { ...await request<QueryResult>("/api/query", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ project_id, question, method, top_k: 5 }),
-  }),
+  }), execution: "backend" },
   conflicts: (project_id: string) => import.meta.env.VITE_STATIC_DEMO === "true" ? staticApi.conflicts(project_id) : request<{ conflicts: Conflict[] }>("/api/consistency/check", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ project_id, categories: [] }),
