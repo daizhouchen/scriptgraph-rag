@@ -4,13 +4,16 @@ export type Diagnostic = { code: string; level: "warning" | "error"; message: st
 export type Scene = { id: string; number: number; heading: string; lineStart: number; lineEnd: number; text: string };
 export type EntityCandidate = { name: string; kind: EntityKind; reason?: string; source: "forced" | "dialogue" | "tag" | "candidate"; lineNumbers: number[] };
 export type ParsedScript = { text: string; lines: string[]; scenes: Scene[]; entityCandidates: EntityCandidate[]; diagnostics: Diagnostic[]; canImport: boolean };
-export type ScriptVersion = { id: string; label: string; createdAt: number; text: string; scenes: Scene[]; diagnostics: Diagnostic[] };
+export type ScriptVersion = { id: string; label: string; createdAt: number; text: string; scenes: Scene[]; diagnostics: Diagnostic[]; parentVersionId?: string; sceneOrigins?: Record<string, string> };
+export type DraftScene = { id: string; sourceSceneId: string | null; text: string };
+export type WorkingDraft = { baseVersionId: string; label: string; createdAt: number; updatedAt: number; scenes: DraftScene[]; preamble: string; lastEditedSceneId?: string };
+export type DraftPreview = { text: string; scenes: { draftSceneId: string; heading: string; lineStart: number; lineEnd: number; sourceSceneId: string | null }[]; diagnostics: Diagnostic[]; canPublish: boolean; changedScenes: number };
 export type EvidenceRef = { versionId: string; sceneId: string; lineStart: number; lineEnd: number; quote: string };
 export type Entity = { id: string; kind: EntityKind; name: string; aliases: string[]; confirmed: boolean };
 export type EntityInput = { id?: string; kind: EntityKind; name: string; aliases?: string[]; confirmed?: boolean };
 export type IssueStatus = "open" | "working" | "resolved" | "dismissed";
 export type ReviewIssue = { id: string; title: string; note: string; status: IssueStatus; evidence: EvidenceRef[]; createdVersionId: string; reviewedVersionId: string | null; createdAt: number; updatedAt: number };
-export type Project = { schemaVersion: 2; id: string; title: string; origin: "import" | "paste" | "sample"; activeVersionId: string; versions: ScriptVersion[]; entities: Entity[]; issues: ReviewIssue[]; createdAt: number; updatedAt: number };
+export type Project = { schemaVersion: 3; id: string; title: string; origin: "import" | "paste" | "sample"; activeVersionId: string; versions: ScriptVersion[]; entities: Entity[]; issues: ReviewIssue[]; createdAt: number; updatedAt: number; draft?: WorkingDraft };
 export type GraphMention = { entityId: string; sceneId: string; alias: string; ref: EvidenceRef };
 export type ProjectGraph = { versionId: string; entities: Entity[]; mentions: GraphMention[]; edges: { entityId: string; sceneId: string; refs: EvidenceRef[] }[] };
 export type QueryMatch = { sceneId: string; sceneNumber: number; heading: string; kind: "direct" | "related"; excerpt: string; ref: EvidenceRef; matchedTerms: string[]; path?: { entityId: string; entityName: string; fromSceneId: string; toSceneId: string } };
@@ -27,6 +30,63 @@ export const DOMAIN_LIMITS = { versions: 30, entities: 500, issues: 1000, totalT
 export class DomainError extends Error {
   code: string;
   constructor(code: string, message: string) { super(message); this.name = "DomainError"; this.code = code; }
+}
+
+/** The compact export and every project mutation share one character limit. */
+export function serializeBackup(project: Project): string {
+  assertBackupCapacity(project);
+  return JSON.stringify(backupEnvelope(project));
+}
+
+function backupEnvelope(project: Project) {
+  return { format: "scriptgraph-project", schemaVersion: 3, project };
+}
+
+function assertBackupCapacity(project: Project): Project {
+  // Count the exact JSON length without allocating a potentially huge export.
+  // Repeated source/scene/quote strings are measured once per check, not retained
+  // between mutable caller objects. The traversal stops as soon as the cap fails.
+  let length = 0;
+  const strings = new Map<string, number>();
+  const ancestors = new Set<object>();
+  function add(amount: number): void {
+    length += amount;
+    if (length > DOMAIN_LIMITS.backupLength)
+      fail("BACKUP_TOO_LARGE", "项目备份超过 2400 万字符上限，此次修改未保存。请缩短引用范围或减少重复引用，再重试；原项目仍保留。");
+  }
+  function stringLength(value: string): number {
+    let result = strings.get(value);
+    if (result === undefined) { result = JSON.stringify(value).length; strings.set(value, result); }
+    return result;
+  }
+  function visit(value: unknown): void {
+    if (typeof value === "string") { add(stringLength(value)); return; }
+    if (value === null || value === undefined) { add(4); return; }
+    if (typeof value === "boolean") { add(value ? 4 : 5); return; }
+    if (typeof value === "number") { add(Number.isFinite(value) ? String(value).length : 4); return; }
+    if (typeof value !== "object" || ancestors.has(value)) fail("INVALID_PROJECT", "项目包含无法备份的数据。");
+    ancestors.add(value);
+    add(2);
+    if (Array.isArray(value)) {
+      for (let index = 0; index < value.length; index++) {
+        if (index) add(1);
+        visit(value[index]);
+      }
+    } else {
+      if (Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null)
+        fail("INVALID_PROJECT", "项目包含无法备份的数据。");
+      let count = 0;
+      for (const [key, item] of Object.entries(value)) {
+        if (item === undefined) continue;
+        if (count++) add(1);
+        add(stringLength(key) + 1);
+        visit(item);
+      }
+    }
+    ancestors.delete(value);
+  }
+  visit(backupEnvelope(project));
+  return project;
 }
 
 const NUMBERED_PREFIX = /^(?:第\s*)?(?:[0-9０-９]+(?:[-－.．][0-9０-９]+)*|[一二三四五六七八九十百千万零〇两]+)\s*(?:场(?:景)?|幕)?\s*[.．、:：)）-]?\s*/u;
@@ -214,22 +274,137 @@ export function createProject(input: { title: string; text: string; origin?: Pro
   const origin = input.origin ?? "paste";
   if (!["import", "paste", "sample"].includes(origin)) fail("INVALID_ORIGIN", "项目来源无效。");
   const version = newVersion(input.text, input.versionLabel ?? "初稿", input.sceneStarts, now);
-  return { schemaVersion: 2, id: newId(), title, origin, activeVersionId: version.id,
-    versions: [version], entities: [], issues: [], createdAt: now, updatedAt: now };
+  return assertBackupCapacity({ schemaVersion: 3, id: newId(), title, origin, activeVersionId: version.id,
+    versions: [version], entities: [], issues: [], createdAt: now, updatedAt: now });
 }
 export function addVersion(project: Project, input: { text: string; label?: string; sceneStarts?: number[] }, now = Date.now()): Project {
   assertTime(now, project.updatedAt);
+  if (project.draft) fail("DRAFT_EXISTS", "当前项目有未生成的草稿，请先生成修订稿或放弃草稿，再导入其他版本。");
   if (project.versions.length >= DOMAIN_LIMITS.versions) fail("VERSION_LIMIT", "项目最多保存 30 个版本，请先导出备份。");
   const version = newVersion(input.text, input.label ?? `第 ${project.versions.length + 1} 版`, input.sceneStarts, now);
   if (project.versions.reduce((total, item) => total + item.text.length, version.text.length) > DOMAIN_LIMITS.totalTextLength)
     fail("PROJECT_TOO_LARGE", "项目各版本的文本总量超过上限，请分项目管理。");
-  return { ...project, versions: [...project.versions, version], activeVersionId: version.id, updatedAt: now };
+  return assertBackupCapacity({ ...project, versions: [...project.versions, version], activeVersionId: version.id, updatedAt: now });
+}
+
+export function startDraft(project: Project, options: { label?: string } = {}, now = Date.now()): Project {
+  if (project.draft) return project;
+  assertTime(now, project.updatedAt);
+  const base = getVersion(project, project.activeVersionId);
+  const draft: WorkingDraft = { baseVersionId: base.id, label: requiredText(options.label ?? `第 ${project.versions.length + 1} 版`, 120, "草稿名称"), createdAt: now, updatedAt: now,
+    preamble: versionPreamble(base), scenes: base.scenes.map(scene => ({ id: newId(), sourceSceneId: scene.id, text: scene.text })) };
+  if (draft.scenes[0]) draft.lastEditedSceneId = draft.scenes[0].id;
+  return assertBackupCapacity({ ...project, draft, updatedAt: now });
+}
+
+export function updateDraftScene(project: Project, sceneId: string, text: string, now = Date.now()): Project {
+  const draft = getDraft(project);
+  getDraftScene(draft, sceneId);
+  const normalized = draftText(text);
+  return withDraft(project, { ...draft, lastEditedSceneId: sceneId, scenes: draft.scenes.map(scene => scene.id === sceneId ? { ...scene, text: normalized } : scene) }, now);
+}
+
+export function addDraftScene(project: Project, input: { afterSceneId?: string; text?: string } = {}, now = Date.now()): Project {
+  const draft = getDraft(project);
+  if (draft.scenes.length >= MAX_SCENES) fail("TOO_MANY_SCENES", `草稿最多保存 ${MAX_SCENES} 个场次。`);
+  const afterIndex = input.afterSceneId === undefined ? draft.scenes.length - 1 : draft.scenes.findIndex(scene => scene.id === input.afterSceneId);
+  if (input.afterSceneId !== undefined && afterIndex < 0) fail("UNKNOWN_DRAFT_SCENE", "草稿中找不到要插入到其后的场次。");
+  const scenes = [...draft.scenes];
+  const added = { id: newId(), sourceSceneId: null, text: draftText(input.text ?? "内景 新场景 - 日\n\n") };
+  scenes.splice(afterIndex + 1, 0, added);
+  return withDraft(project, { ...draft, scenes, lastEditedSceneId: added.id }, now);
+}
+
+export function moveDraftScene(project: Project, sceneId: string, direction: "up" | "down", now = Date.now()): Project {
+  const draft = getDraft(project);
+  getDraftScene(draft, sceneId);
+  if (direction !== "up" && direction !== "down") fail("INVALID_DIRECTION", "场次只能向上或向下移动。");
+  const index = draft.scenes.findIndex(scene => scene.id === sceneId);
+  const target = index + (direction === "up" ? -1 : 1);
+  if (target < 0 || target >= draft.scenes.length) return project;
+  const scenes = [...draft.scenes];
+  [scenes[index], scenes[target]] = [scenes[target], scenes[index]];
+  return withDraft(project, { ...draft, scenes, lastEditedSceneId: sceneId }, now);
+}
+
+export function removeDraftScene(project: Project, sceneId: string, now = Date.now()): Project {
+  const draft = getDraft(project);
+  getDraftScene(draft, sceneId);
+  const index = draft.scenes.findIndex(scene => scene.id === sceneId);
+  const scenes = draft.scenes.filter(scene => scene.id !== sceneId);
+  const next: WorkingDraft = { ...draft, scenes };
+  if (draft.lastEditedSceneId === sceneId) {
+    const fallback = scenes[Math.min(index, scenes.length - 1)];
+    if (fallback) next.lastEditedSceneId = fallback.id;
+    else delete next.lastEditedSceneId;
+  }
+  return withDraft(project, next, now);
+}
+
+export function renameDraft(project: Project, label: string, now = Date.now()): Project {
+  return withDraft(project, { ...getDraft(project), label: requiredText(label, 120, "草稿名称") }, now);
+}
+
+export function discardDraft(project: Project, now = Date.now()): Project {
+  if (!project.draft) return project;
+  assertTime(now, project.updatedAt);
+  const { draft: removed, ...rest } = project;
+  void removed;
+  return assertBackupCapacity({ ...rest, updatedAt: now });
+}
+
+export function previewDraft(project: Project): DraftPreview {
+  const draft = getDraft(project);
+  const base = getVersion(project, draft.baseVersionId);
+  const text = assembleDraft(draft);
+  const diagnostics: Diagnostic[] = [];
+  if (base.id !== project.activeVersionId) diagnostics.push({ code: "DRAFT_BASE_CHANGED", level: "error", message: "当前正式稿本已变化。此草稿仍基于旧稿，不能直接生成；请保留备份后处理版本差异。" });
+  if (!draft.scenes.length) diagnostics.push({ code: "EMPTY_DRAFT", level: "error", message: "草稿至少需要保留一个场次。" });
+  if (project.versions.length >= DOMAIN_LIMITS.versions) diagnostics.push({ code: "VERSION_LIMIT", level: "error", message: "项目已达到 30 个版本上限，请先备份并分项目管理。" });
+  if (project.versions.reduce((total, item) => total + item.text.length, text.length) > DOMAIN_LIMITS.totalTextLength) diagnostics.push({ code: "PROJECT_TOO_LARGE", level: "error", message: "生成后项目文本总量将超过上限，请先备份并分项目管理。" });
+  let nextLine = draft.preamble.split("\n").length;
+  const scenes = draft.scenes.map(scene => {
+    const lines = scene.text.split("\n");
+    const first = lines.findIndex(line => line.trim());
+    const headings = lines.flatMap((line, index) => isSceneHeading(line) ? [index] : []);
+    const original = base.scenes.find(item => item.id === scene.sourceSceneId);
+    const unchangedSource = !!original && original.text === scene.text;
+    if (first < 0) diagnostics.push({ code: "EMPTY_DRAFT_SCENE", level: "error", line: nextLine, message: "这一场为空，请补充场头与正文，或移除此场。" });
+    else if (!unchangedSource) {
+      if (!isSceneHeading(lines[first])) diagnostics.push({ code: "DRAFT_HEADING_REQUIRED", level: "error", line: nextLine + first, message: "每场开头需有场头，例如「内景 地点 - 日」或「INT. ROOM - DAY」。" });
+      if (headings.length > 1) diagnostics.push({ code: "MULTIPLE_DRAFT_HEADINGS", level: "error", line: nextLine + headings[1], message: "同一个场次编辑框中出现了多个场头，请将新场景放进单独的场次。" });
+      if (isSceneHeading(lines[first]) && !lines.slice(first + 1).some(line => line.trim())) diagnostics.push({ code: "DRAFT_BODY_REQUIRED", level: "error", line: nextLine + first, message: "这一场只有场头，请补充正文或移除此场。" });
+    } else if (original.heading === "未分场内容") diagnostics.push({ code: "PRESERVED_UNASSIGNED_CONTENT", level: "warning", line: nextLine, message: "原稿的未分场片段已原样保留，未将其解释为新的场景。" });
+    else if (!isSceneHeading(lines[first]) || headings.length > 1) diagnostics.push({ code: "PRESERVED_CONFIRMED_BOUNDARY", level: "warning", line: nextLine, message: "原稿中已确认的分场与文字均未变化，保留原分场边界。修改此场或新增场次时仍需检查场头。" });
+    const result = { draftSceneId: scene.id, sourceSceneId: scene.sourceSceneId, heading: unchangedSource ? original.heading : first < 0 ? "空白场次" : lines[first].trim(), lineStart: nextLine, lineEnd: nextLine + lines.length - 1 };
+    nextLine += lines.length;
+    return result;
+  });
+  const changedScenes = draftChangeCount(base, draft);
+  if (!changedScenes || text === base.text) diagnostics.push({ code: "NO_DRAFT_CHANGES", level: "warning", message: "草稿正文与顺序尚无变化，不会生成重复版本。" });
+  return { text, scenes, diagnostics, changedScenes, canPublish: changedScenes > 0 && text !== base.text && !diagnostics.some(item => item.level === "error") };
+}
+
+export function publishDraft(project: Project, options: { label?: string } = {}, now = Date.now()): Project {
+  assertTime(now, project.updatedAt);
+  const draft = getDraft(project);
+  const preview = previewDraft(project);
+  if (!preview.canPublish) fail("DRAFT_NOT_READY", preview.diagnostics.map(item => item.message).join(" "));
+  if (project.versions.reduce((total, item) => total + item.text.length, preview.text.length) > DOMAIN_LIMITS.totalTextLength) fail("PROJECT_TOO_LARGE", "项目各版本的文本总量超过上限，请先备份并分项目管理。");
+  const scenes: Scene[] = preview.scenes.map((scene, index) => ({ id: newId(), number: index + 1, heading: scene.heading, lineStart: scene.lineStart, lineEnd: scene.lineEnd, text: draft.scenes[index].text }));
+  const sceneOrigins: Record<string, string> = {};
+  scenes.forEach((scene, index) => { const origin = draft.scenes[index].sourceSceneId; if (origin !== null) sceneOrigins[scene.id] = origin; });
+  const version: ScriptVersion = { id: newId(), label: requiredText(options.label ?? draft.label, 120, "版本名称"), createdAt: now,
+    text: preview.text, scenes, diagnostics: preview.diagnostics.filter(item => item.level === "warning"), parentVersionId: draft.baseVersionId, sceneOrigins };
+  const { draft: removed, ...rest } = project;
+  void removed;
+  return assertBackupCapacity({ ...rest, versions: [...project.versions, version], activeVersionId: version.id, updatedAt: now });
 }
 export function setEntities(project: Project, inputs: EntityInput[], now = Date.now()): Project {
   assertTime(now, project.updatedAt);
   if (!Array.isArray(inputs) || inputs.length > DOMAIN_LIMITS.entities) fail("ENTITY_LIMIT", "最多保存 500 个角色或道具。");
   const used = new Set<string>();
-  const reserved = new Set([project.id, ...project.versions.flatMap(version => [version.id, ...version.scenes.map(scene => scene.id)]), ...project.issues.map(issue => issue.id)]);
+  const reserved = new Set([project.id, ...project.versions.flatMap(version => [version.id, ...version.scenes.map(scene => scene.id)]), ...project.issues.map(issue => issue.id), ...(project.draft?.scenes.map(scene => scene.id) ?? [])]);
   const names = new Set<string>();
   const entities = inputs.map(input => {
     if (input.kind !== "character" && input.kind !== "prop") fail("INVALID_ENTITY", "角色或道具类型无效。");
@@ -252,7 +427,7 @@ export function setEntities(project: Project, inputs: EntityInput[], now = Date.
     return { id, name, kind: input.kind, aliases, confirmed: input.confirmed ?? true };
   });
   assertEntityNames(entities);
-  return { ...project, entities, updatedAt: now };
+  return assertBackupCapacity({ ...project, entities, updatedAt: now });
 }
 export function buildGraph(project: Project, versionId = project.activeVersionId): ProjectGraph {
   const version = getVersion(project, versionId);
@@ -328,13 +503,26 @@ export function diffVersions(project: Project, fromVersionId: string, toVersionI
   const oldRemaining = new Set(from.scenes.map(scene => scene.id));
   const newRemaining = new Set(to.scenes.map(scene => scene.id));
   const pairs: { before: Scene; after: Scene; change: SceneChange }[] = [];
-  function addPair(before: Scene, after: Scene, kind: "unchanged" | "modified") {
+  function addPair(before: Scene, after: Scene, kind: "unchanged" | "modified", explicit = false) {
+    if (!oldRemaining.has(before.id) || !newRemaining.has(after.id)) return;
     const change: SceneChange = { id: `${before.id}:${after.id}`, kind, fromSceneId: before.id, toSceneId: after.id,
       fromSceneIds: [before.id], toSceneIds: [after.id], moved: false,
-      summary: kind === "unchanged" ? "原文内容一致（忽略场序标记、场头格式与首尾空白）。" : "唯一同名场头的内容有变化，请核对两版原文。" };
+      summary: kind === "unchanged" ? "原文内容一致（忽略场序标记、场头格式与首尾空白）。" : explicit ? "有明确编辑来源的同一场次内容改变，请核对两版原文。" : "唯一同名场头的内容有变化，请核对两版原文。" };
     changes.push(change); pairs.push({ before, after, change });
     oldRemaining.delete(before.id); newRemaining.delete(after.id);
   }
+  for (const scene of to.scenes) {
+    const origin = traceSceneOrigin(project, to.id, scene.id, from.id);
+    const before = from.scenes.find(item => item.id === origin);
+    if (before) addPair(before, scene, sceneContentKey(before) === sceneContentKey(scene) ? "unchanged" : "modified", true);
+  }
+  for (const scene of from.scenes) {
+    const origin = traceSceneOrigin(project, from.id, scene.id, to.id);
+    const after = to.scenes.find(item => item.id === origin);
+    if (after) addPair(scene, after, sceneContentKey(scene) === sceneContentKey(after) ? "unchanged" : "modified", true);
+  }
+  const explicitRelation = hasVersionAncestry(project, to.id, from.id) || hasVersionAncestry(project, from.id, to.id);
+  if (!explicitRelation) {
   const oldText = groupBy(from.scenes, sceneContentKey);
   const newText = groupBy(to.scenes, sceneContentKey);
   for (const [key, before] of oldText) {
@@ -355,6 +543,7 @@ export function diffVersions(project: Project, fromVersionId: string, toVersionI
         summary: "场头重复且原文无法唯一对应；未按场次编号自动匹配，请人工核对。" });
       before.forEach(scene => oldRemaining.delete(scene.id)); after.forEach(scene => newRemaining.delete(scene.id));
     }
+  }
   }
   // A numeric shift after insertion is not a move. Only reversed order among matched scenes is.
   for (const pair of pairs) {
@@ -392,7 +581,7 @@ export function createIssue(project: Project, input: IssueInput, now = Date.now(
   const fields = issueFields(project, { title: input.title, note: input.note ?? "", status: input.status ?? "open", evidence: input.evidence ?? [] });
   const issue: ReviewIssue = { ...fields, id: newId(), createdVersionId: project.activeVersionId,
     reviewedVersionId: fields.evidence.some(ref => ref.versionId === project.activeVersionId && ref.quote.trim()) ? project.activeVersionId : null, createdAt: now, updatedAt: now };
-  return { ...project, issues: [...project.issues, issue], updatedAt: now };
+  return assertBackupCapacity({ ...project, issues: [...project.issues, issue], updatedAt: now });
 }
 export function updateIssue(project: Project, issueId: string, patch: IssuePatch, now = Date.now()): Project {
   assertTime(now, project.updatedAt);
@@ -423,10 +612,14 @@ export function validateBackup(raw: unknown): BackupResult {
     }
     let value = record(raw, "项目");
     if (value.format !== undefined) {
-      if (value.format !== "scriptgraph-project" || value.schemaVersion !== 2) fail("INVALID_FORMAT", "备份格式或版本不受支持。");
+      if (value.format !== "scriptgraph-project" || (value.schemaVersion !== 2 && value.schemaVersion !== 3)) fail("INVALID_FORMAT", "备份格式或版本不受支持。");
+      const wrapperVersion = value.schemaVersion;
       value = record(value.project, "项目");
+      if (value.schemaVersion !== wrapperVersion) fail("INVALID_FORMAT", "备份封装与项目版本不一致，未导入。");
     }
-    if (value.schemaVersion !== 2) fail("INVALID_VERSION", "只支持本机工作台 v2 项目备份。");
+    if (value.schemaVersion !== 2 && value.schemaVersion !== 3) fail("INVALID_VERSION", "只支持本机工作台 v2 / v3 项目备份。");
+    const legacy = value.schemaVersion === 2;
+    if (legacy && value.draft !== undefined) fail("INVALID_DRAFT_SCHEMA", "v2 备份不能携带 v3 草稿，未丢弃或导入任何草稿内容。");
     const id = readId(value.id);
     const title = requiredText(value.title, 120, "项目名称");
     if (value.origin !== "import" && value.origin !== "paste" && value.origin !== "sample") fail("INVALID_ORIGIN", "项目来源无效。");
@@ -476,7 +669,26 @@ export function validateBackup(raw: unknown): BackupResult {
         }
         return result;
       });
-      return { id: versionId, label, createdAt: time, text, scenes, diagnostics };
+      const version: ScriptVersion = { id: versionId, label, createdAt: time, text, scenes, diagnostics };
+      if (data.parentVersionId !== undefined || data.sceneOrigins !== undefined) {
+        if (legacy) fail("INVALID_LINEAGE_SCHEMA", "v2 备份不能携带 v3 场次来源关系。");
+        version.parentVersionId = readId(data.parentVersionId);
+        const origins = record(data.sceneOrigins, "场次来源");
+        if (Object.keys(origins).length > scenes.length) fail("INVALID_LINEAGE", "场次来源数量超过当前场次。");
+        version.sceneOrigins = {};
+        for (const [child, parent] of Object.entries(origins)) version.sceneOrigins[readId(child)] = readId(parent);
+      }
+      return version;
+    });
+    versions.forEach((version, index) => {
+      if (!version.parentVersionId) return;
+      const parent = versions.slice(0, index).find(item => item.id === version.parentVersionId);
+      if (!parent || parent.createdAt > version.createdAt) fail("INVALID_LINEAGE", "场次来源必须指向更早的项目内版本，不能循环或跨项目。");
+      const origins = version.sceneOrigins!;
+      if (new Set(Object.values(origins)).size !== Object.keys(origins).length) fail("INVALID_LINEAGE", "同一个来源场次不能被重复映射；新增场次应使用独立来源。");
+      for (const [childId, parentId] of Object.entries(origins)) {
+        if (!version.scenes.some(scene => scene.id === childId) || !parent.scenes.some(scene => scene.id === parentId)) fail("INVALID_LINEAGE", "场次来源引用了不存在或不属于对应版本的场次。");
+      }
     });
     const activeVersionId = readId(value.activeVersionId);
     if (!versions.some(version => version.id === activeVersionId)) fail("UNKNOWN_VERSION", "当前版本不存在。");
@@ -490,7 +702,7 @@ export function validateBackup(raw: unknown): BackupResult {
     const entityNames = entities.map(entity => `${entity.kind}:${entity.name.toLocaleLowerCase()}`);
     if (new Set(entityNames).size !== entityNames.length || entities.some(entity => new Set(entity.aliases).size !== entity.aliases.length)) fail("DUPLICATE_ENTITY", "实体或别名重复。");
     assertEntityNames(entities);
-    const project: Project = { schemaVersion: 2, id, title, origin: value.origin, activeVersionId, versions, entities, issues: [], createdAt, updatedAt };
+    const project: Project = { schemaVersion: 3, id, title, origin: value.origin, activeVersionId, versions, entities, issues: [], createdAt, updatedAt };
     project.issues = list(value.issues, DOMAIN_LIMITS.issues, "审阅问题").map(item => {
       const data = record(item, "审阅问题");
       const issueId = uniqueId(data.id, ids);
@@ -507,7 +719,36 @@ export function validateBackup(raw: unknown): BackupResult {
       if (reviewedVersionId && !evidence.some(ref => ref.versionId === reviewedVersionId && ref.quote.trim())) fail("INVALID_REVIEW", "已核对的版本必须保留该版本的原文依据。");
       return { id: issueId, ...fields, createdVersionId, reviewedVersionId, createdAt: time, updatedAt: updated };
     });
-    return { ok: true, project, errors: [] };
+    if (value.draft !== undefined) {
+      const data = record(value.draft, "草稿");
+      const baseVersionId = readId(data.baseVersionId);
+      const base = getVersion(project, baseVersionId);
+      const draftCreatedAt = readTime(data.createdAt, base.createdAt, updatedAt);
+      const draftUpdatedAt = readTime(data.updatedAt, draftCreatedAt, updatedAt);
+      const label = requiredText(data.label, 120, "草稿名称");
+      if (typeof data.preamble !== "string" || data.preamble !== versionPreamble(base)) fail("INVALID_DRAFT_PREAMBLE", "草稿的原始前言与基线版本不一致，未导入。");
+      const origins = new Set<string>();
+      const scenes: DraftScene[] = list(data.scenes, MAX_SCENES, "草稿场次").map(item => {
+        const scene = record(item, "草稿场次");
+        const sceneId = uniqueId(scene.id, ids);
+        const sourceSceneId = scene.sourceSceneId === null ? null : readId(scene.sourceSceneId);
+        if (sourceSceneId !== null) {
+          if (!base.scenes.some(item => item.id === sourceSceneId) || origins.has(sourceSceneId)) fail("INVALID_DRAFT_ORIGIN", "草稿来源场次不存在于基线版本，或被重复使用。");
+          origins.add(sourceSceneId);
+        }
+        if (typeof scene.text !== "string" || draftText(scene.text) !== scene.text) fail("INVALID_DRAFT_TEXT", "草稿文字格式无效，未改写或丢弃草稿。");
+        return { id: sceneId, sourceSceneId, text: scene.text };
+      });
+      const draft: WorkingDraft = { baseVersionId, label, createdAt: draftCreatedAt, updatedAt: draftUpdatedAt, preamble: data.preamble, scenes };
+      if (data.lastEditedSceneId !== undefined) {
+        const lastEditedSceneId = readId(data.lastEditedSceneId);
+        if (!scenes.some(scene => scene.id === lastEditedSceneId)) fail("INVALID_DRAFT_SELECTION", "草稿续写位置不存在于草稿场次中。");
+        draft.lastEditedSceneId = lastEditedSceneId;
+      }
+      if (assembleDraft(draft).length > MAX_TEXT_LENGTH) fail("DRAFT_TOO_LARGE", "草稿总文本超过长度上限。");
+      project.draft = draft;
+    }
+    return { ok: true, project: assertBackupCapacity(project), errors: [] };
   } catch (error) { return { ok: false, errors: [error instanceof DomainError ? error.message : "备份格式异常，未导入任何内容。"] }; }
 }
 export function cloneProject(project: Project, options: { title?: string } = {}, now = Date.now()): Project {
@@ -515,11 +756,72 @@ export function cloneProject(project: Project, options: { title?: string } = {},
   const validated = validateBackup(project);
   if (!validated.ok) fail("INVALID_PROJECT", validated.errors.join(" "));
   // Preserve source timestamps and all internal IDs; only the library identity changes.
-  return { ...validated.project, id: newId(), title: requiredText(options.title ?? `${project.title.slice(0, 110)}（副本）`, 120, "项目名称"), updatedAt: now };
+  return assertBackupCapacity({ ...validated.project, id: newId(), title: requiredText(options.title ?? `${project.title.slice(0, 110)}（副本）`, 120, "项目名称"), updatedAt: now });
 }
 
 function fail(code: string, message: string): never { throw new DomainError(code, message); }
 function newId(): string { return crypto.randomUUID(); }
+function getDraft(project: Project): WorkingDraft {
+  if (!project.draft) fail("NO_DRAFT", "当前项目还没有草稿，请先开始一轮改稿。");
+  return project.draft;
+}
+function getDraftScene(draft: WorkingDraft, id: string): DraftScene {
+  const scene = draft.scenes.find(item => item.id === id);
+  if (!scene) fail("UNKNOWN_DRAFT_SCENE", "草稿中找不到此场次。");
+  return scene;
+}
+function versionPreamble(version: ScriptVersion): string {
+  const count = version.scenes[0].lineStart - 1;
+  return count > 0 ? version.text.split("\n").slice(0, count).join("\n") + "\n" : "";
+}
+function draftText(value: unknown): string {
+  if (typeof value !== "string" || value.length > MAX_TEXT_LENGTH || value.includes("\u0000")) fail("INVALID_DRAFT_TEXT", "草稿场次必须是未超出长度上限的文本，且不能含 NUL 字符。");
+  return value.replace(/^\uFEFF/u, "").replace(/\r\n?/gu, "\n");
+}
+function assembleDraft(draft: WorkingDraft): string { return draft.preamble + draft.scenes.map(scene => scene.text).join("\n"); }
+function withDraft(project: Project, draft: WorkingDraft, now: number): Project {
+  assertTime(now, project.updatedAt);
+  if (assembleDraft(draft).length > MAX_TEXT_LENGTH) fail("DRAFT_TOO_LARGE", "草稿总文本超过长度上限，请分稿管理。");
+  return assertBackupCapacity({ ...project, draft: { ...draft, updatedAt: now }, updatedAt: now });
+}
+function draftChangeCount(base: ScriptVersion, draft: WorkingDraft): number {
+  const changed = new Set<string>();
+  const sourceIds = new Set(draft.scenes.map(scene => scene.sourceSceneId).filter(Boolean));
+  for (const scene of base.scenes) if (!sourceIds.has(scene.id)) changed.add(scene.id);
+  const pairs: { source: Scene; index: number }[] = [];
+  draft.scenes.forEach((scene, index) => {
+    const source = base.scenes.find(item => item.id === scene.sourceSceneId);
+    if (!source) changed.add(scene.id);
+    else {
+      if (source.text !== scene.text) changed.add(source.id);
+      pairs.push({ source, index });
+    }
+  });
+  for (const pair of pairs) if (pairs.some(other => (pair.source.number - other.source.number) * (pair.index - other.index) < 0)) changed.add(pair.source.id);
+  return changed.size;
+}
+function traceSceneOrigin(project: Project, versionId: string, sceneId: string, ancestorId: string): string | null {
+  let version = getVersion(project, versionId);
+  let current = sceneId;
+  const seen = new Set<string>();
+  while (version.id !== ancestorId) {
+    if (seen.has(version.id) || !version.parentVersionId || !version.sceneOrigins?.[current]) return null;
+    seen.add(version.id);
+    current = version.sceneOrigins[current];
+    version = getVersion(project, version.parentVersionId);
+  }
+  return current;
+}
+function hasVersionAncestry(project: Project, versionId: string, ancestorId: string): boolean {
+  let version = getVersion(project, versionId);
+  const seen = new Set<string>();
+  while (version.id !== ancestorId) {
+    if (seen.has(version.id) || !version.parentVersionId) return false;
+    seen.add(version.id);
+    version = getVersion(project, version.parentVersionId);
+  }
+  return true;
+}
 function validId(value: unknown): value is string { return typeof value === "string" && /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,199}$/u.test(value) && !["__proto__", "constructor", "prototype"].includes(value); }
 function readId(value: unknown): string { if (!validId(value)) fail("INVALID_ID", "记录编号无效。"); return value; }
 function uniqueId(value: unknown, ids: Set<string>): string { const id = readId(value); if (ids.has(id)) fail("DUPLICATE_ID", "记录编号重复。"); ids.add(id); return id; }
@@ -611,7 +913,7 @@ function issueFields(project: Project, input: Required<IssueInput>): Required<Is
   return { title, note, status: input.status, evidence };
 }
 function replaceIssue(project: Project, issue: ReviewIssue, now: number): Project {
-  return { ...project, issues: project.issues.map(item => item.id === issue.id ? issue : item), updatedAt: now };
+  return assertBackupCapacity({ ...project, issues: project.issues.map(item => item.id === issue.id ? issue : item), updatedAt: now });
 }
 
 function assertEntityNames(entities: Entity[]): void {

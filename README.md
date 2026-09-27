@@ -4,7 +4,7 @@
 
 [打开本机工作台](https://daizhouchen.github.io/scriptgraph-rag/) · [按步骤体验](docs/product.md#完成一轮可验收的改稿) · [架构说明](docs/architecture.md) · [技术实验室](https://daizhouchen.github.io/scriptgraph-rag/#lab)
 
-ScriptGraph 帮助编剧和剧本统筹处理一个具体问题：读到跨场疑点后，怎样把依据和修改方案留下来，并在下一稿核对它是否已经处理。导入自己的 Fountain / TXT，确认分场、人物与道具，用原文字词和实体关联找材料，再建立带版本引用的改稿任务。
+ScriptGraph 帮助编剧和剧本统筹处理一个具体问题：读到跨场疑点后，怎样把依据和修改方案留下来，直接改好相关场次，并在下一稿核对结果。导入自己的 Fountain / TXT，确认分场与实体，用原文字词和实体关联查证，选择精确行段建立任务；在独立草稿中逐场修改、增删和调序，生成正式修订稿后按引用变化安排人工复核。
 
 工作台在浏览器内处理文本并用 IndexedDB 保存项目。无需注册、API Key、Python 或 Neo4j。它不接实时大模型，不从用户文本自动推断人物关系、道具归属或剧情矛盾；原有 GraphRAG 引擎和固定评测保留在独立的 [`#lab` 技术实验室](#lab)。
 
@@ -12,12 +12,12 @@ ScriptGraph 帮助编剧和剧本统筹处理一个具体问题：读到跨场�
 
 没有准备好的剧本，可以点击「用完整示例走一遍」。原创教学短片《末班放映》包含 8 场初稿、2 项预设人工审阅任务和一份可导入的修订稿；这些任务不是自动检测结果。
 
-1. 在「剧本与关系」读第 5、6 场，查看黄铜钥匙的原文与已确认索引。
-2. 到「查证原文」搜索 `黄铜钥匙`，比较「只查原文」与「原文 + 关系扩展」。打开出处，区分直接命中与沿实体补充的场次。
-3. 勾选相关结果，创建自己的改稿任务，写下疑点、处理方案和验收条件；或打开示例中已有的交接任务。
-4. 点击「导入／编辑新版」，载入示例修订稿，先预览分场与变化，再确认导入。旧稿和旧任务引用仍可打开。
-5. 在「版本与复查」查看变化，进入任务复核，补充当前稿本的原文依据，再保存处理结论。仅修改备注或导入新稿不会完成这一轮复核。
-6. 等待「已保存到此浏览器」，刷新检查项目仍在。导出 JSON 备份，再从项目库恢复为独立副本，核对版本、任务与历史引用。
+1. 在「剧本与关系」读第 5、6 场，或搜索 `黄铜钥匙` 查回出处。点击行号选择一句，Shift + 点击扩展范围；用真实行段记下一项交接疑点。
+2. 打开该任务的「去修改相关场次」，或从项目顶部「开始逐场改稿」。确认当前场、修改要求与原稿关联材料，再修改草稿正文。已有正式稿和任务引用保持原样。
+3. 试着新增场次、调整顺序，或删除不需要的草稿场次；等顶部显示保存成功后离开、刷新并继续。放弃草稿须确认，不会删除已有正式版本。
+4. 点击「生成修订稿」，检查场头、正文、顺序与预览行号，填写稿名后确认。失败会保留草稿；完全未改时不生成重复版本。也可在没有未完成草稿时「导入外部新版」。
+5. 在「版本与复查」查看实际增删行。优先检查原文变化、上下文变化、位置变化或对应不明的任务；引用未变也需要人工确认。阅读旧依据与新版候选，采用或重新选择新版行段，再提交复核。
+6. 导出两个指定版本的改稿记录和项目 JSON 备份，再恢复为独立副本。核对正式稿、未完成草稿、任务和历史引用；改稿记录是当前状态报告，不是本轮操作历史。
 
 自己的剧本也走同一条路径，详见 [导入与验收说明](docs/product.md)。
 
@@ -27,11 +27,14 @@ ScriptGraph 帮助编剧和剧本统筹处理一个具体问题：读到跨场�
 |---|---|---|
 | 导入 | 浏览器读取 UTF-8 Fountain / TXT 或粘贴文本；预览场次、行号和格式候选 | 修正分场，取消误识别人物，补充道具与别名 |
 | 查证 | 字词匹配；同场满足多个关键词；沿已确认实体的实际提及扩展场次 | 关联场次是否与问题有关，原文是否支持判断 |
-| 改稿任务 | 标题、修改方案、处理状态和一处或多处版本引用 | 疑点是否成立、怎样修改、什么算完成 |
-| 版本对照 | 保留每一稿；对照内容、唯一场头和相对顺序；列出无法唯一对应的场次 | 重复场头、改名等不确定对应，以及改动的创作意义 |
-| 复核与保存 | 当前稿本复核记录、IndexedDB 保存、项目 JSON 备份与校验恢复 | 补上新版依据后确认结果，定期导出备份 |
+| 逐场改稿 | 独立持久化草稿；修改、增删、调序；校验通过后生成正式版本及场次来源链 | 修改是否符合任务要求，何时生成下一稿 |
+| 改稿任务 | 标题、修改方案、处理状态和精确到行的历史引用 | 疑点是否成立、怎样修改、什么算完成 |
+| 版本对照 | 优先使用明确来源链；其余按唯一内容或场头匹配；展示增删行和歧义 | 不确定对应与改动的创作意义 |
+| 复核与交接 | 引用变化分级、人工复核、当前状态报告、IndexedDB 保存与 JSON 恢复 | 阅读新版后确认；区分已保存草稿、正式版本与任务是否解决 |
 
 每条引用绑定「版本 ID + 场次 ID + 行号 + 原文摘录」。新版插场或调序不会把旧任务悄悄改指向同序号的新场次。关系图只表达人物／道具名称在场次中的提及；共同出现不等于人物有关系，提及道具不等于持有。
+
+复核分级只比较最近有效复核所用的依据；没有该组时使用最新有依据稿本。旧引用累积不会使已核对过的历史改动反复误报，其他场次的无关改动也不会把引用未变任务列为高优先级。但「引用未变」不等于新稿已人工复核。长文本超出精细行匹配预算时会明确降级，仍保留两稿全部原行。
 
 当前页面搜索使用字词匹配与实体—场次图，不使用语义向量、LLM 问答或自动连续性检查。没有直接命中的查询不会凭图关系补出答案。
 
@@ -47,7 +50,9 @@ npm run dev
 
 打开 `http://localhost:5173/`。默认入口就是本机工作台。剧本文本不会被提交给应用 API；项目保存在当前站点、当前浏览器的 IndexedDB，不能自动跨设备同步。清理站点数据或更换浏览器不会带走项目，请使用「备份项目」下载 JSON。
 
-保存失败时，页面会显示未保存状态并提供重试与备份；不要把仍在页面内的修改当作已经落盘。恢复备份先校验原文、分场和引用，再创建独立项目，不覆盖已有项目。
+保存失败时，页面会显示未保存状态并提供重试与备份；不要把仍在页面内的修改当作已经落盘。JSON 备份包含未完成草稿；恢复前校验原文、分场、引用、草稿和来源链，再创建独立项目，不覆盖已有项目。
+
+当前格式是 schema 3，可读取原有 schema 2 项目库和备份，保留历史 ID、原文、任务及引用。已有项目库原位升级，手动恢复备份则创建副本。保存仍使用同一条库记录及修订号比较，阻止已打开的上一版客户端以旧快照覆盖新保存；不提供跨标签页自动合并。迁移细节见 [架构说明](docs/architecture.md#indexeddb迁移与备份恢复)。
 
 ## 开发检查
 
@@ -58,7 +63,7 @@ npm test
 npm run build
 ```
 
-浏览器领域测试覆盖分场与候选确认、真实图扩展、不可漂移的引用、版本对照、任务复核和备份完整性。它们验证工程规则，不是创作质量或用户效率评测。实现分层和数据约束见 [架构说明](docs/architecture.md)。
+浏览器领域测试覆盖分场与候选确认、真实图扩展、逐场草稿与来源链、精确引用、重复文字歧义、长文降级、任务分级、报告、schema 2 兼容及备份完整性。它们验证工程规则，不是创作质量或用户效率评测。实现分层和数据约束见 [架构说明](docs/architecture.md)。
 
 <a id="lab"></a>
 
@@ -123,7 +128,7 @@ python scripts/review_dataset.py --kind conflicts --reviewer YOUR_NAME
 
 ## English summary
 
-ScriptGraph is a browser-local screenplay revision workbench: import and confirm scenes and entities, retrieve literal text and entity-linked scenes, create source-bound revision tasks, compare drafts, and explicitly review tasks against the current version. Projects persist in IndexedDB and can be backed up to validated JSON. Imported text is not sent to an application API or analyzed by a live LLM. The original Python / FastAPI / Neo4j GraphRAG experiments remain at `#lab`; their fixed synthetic-corpus evaluation is provisional.
+ScriptGraph is a browser-local screenplay revision workbench. Import and confirm a script, retrieve literal text and entity-linked scenes, attach exact line ranges to tasks, and revise scenes in a persistent working draft. Validate and publish a new version, inspect line changes and evidence impact, then explicitly review tasks against the current version. Reports compare selected versions and show current task state, not an event history. Schema 3 projects, including unfinished drafts, persist in IndexedDB and support validated JSON backup and schema 2 migration. Imported text is not sent to an application API or analyzed by a live LLM. The Python / FastAPI / Neo4j experiments remain at `#lab`; their fixed synthetic-corpus evaluation is provisional.
 
 ## License
 

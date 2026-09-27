@@ -1,11 +1,11 @@
 import { validateBackup, type Project } from './domain';
 
-export type Library = { schemaVersion: 2; projects: Project[]; selectedProjectId: string | null };
+export type Library = { schemaVersion: 3; projects: Project[]; selectedProjectId: string | null };
 const DB_NAME = 'scriptgraph-projects';
 const STORE = 'workspace';
 const KEY = 'library-v2';
 let expectedRevision: number | null = null;
-export const emptyLibrary = (): Library => ({ schemaVersion: 2, projects: [], selectedProjectId: null });
+export const emptyLibrary = (): Library => ({ schemaVersion: 3, projects: [], selectedProjectId: null });
 
 export class StorageConflictError extends Error {
   readonly code = 'STORAGE_CONFLICT';
@@ -46,8 +46,8 @@ export async function loadLibrary(): Promise<Library> {
     });
     if (value === undefined) { expectedRevision = 0; return emptyLibrary(); }
     if (!value || typeof value !== 'object') throw new Error('本机记录格式异常，原有记录未被覆盖。');
-    const candidate = value as Library;
-    if (candidate.schemaVersion !== 2 || !Array.isArray(candidate.projects) || candidate.projects.length > 30) throw new Error('本机项目版本无法读取，请先备份再处理。');
+    const candidate = value as Omit<Library, 'schemaVersion'> & { schemaVersion: number };
+    if ((candidate.schemaVersion !== 2 && candidate.schemaVersion !== 3) || !Array.isArray(candidate.projects) || candidate.projects.length > 30) throw new Error('本机项目版本无法读取，请先备份再处理。');
     const projects: Project[] = [];
     for (const item of candidate.projects) {
       const parsed = validateBackup(item);
@@ -56,7 +56,7 @@ export async function loadLibrary(): Promise<Library> {
     }
     if (new Set(projects.map(p => p.id)).size !== projects.length) throw new Error('本机存在重复项目编号，未覆盖记录。');
     const revision = storageRevision(value);
-    const library: Library = { schemaVersion: 2, projects, selectedProjectId: candidate.selectedProjectId === null ? null : projects.some(p => p.id === candidate.selectedProjectId) ? candidate.selectedProjectId : projects[0]?.id || null };
+    const library: Library = { schemaVersion: 3, projects, selectedProjectId: candidate.selectedProjectId === null ? null : projects.some(p => p.id === candidate.selectedProjectId) ? candidate.selectedProjectId : projects[0]?.id || null };
     expectedRevision = revision;
     return library;
   } finally { db.close(); }

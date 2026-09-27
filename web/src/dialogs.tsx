@@ -1,7 +1,9 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, FileUp, Plus, Check, Download } from 'lucide-react';
 import { addVersion, createProject, setEntities, parseScript, makeEvidence, resolveEvidence, diffVersions, type Project, type EvidenceRef, type ReviewIssue, type IssueInput, type ParsedScript, type EntityInput } from './domain';
 import { Modal, Lines, EvidenceButton, getVersion, STATUS_NAMES, saveFile } from './components';
+import { EvidencePicker, LineDiff } from './RevisionTools';
+import { issueImpact } from './revision-analysis';
 import { SAMPLE_REVISION } from './sample-project';
 
 export function ImportDialog({ project, close, commit }: { project?: Project; close: () => void; commit: (project: Project) => void }) {
@@ -87,7 +89,7 @@ export function ImportDialog({ project, close, commit }: { project?: Project; cl
   </Modal>;
 }
 
-export function SourceModal({ project, evidence, close }: { project: Project; evidence: EvidenceRef; close: () => void }) {
+export function SourceModal({ project, evidence, close, newIssue, editScene }: { project: Project; evidence: EvidenceRef; close: () => void; newIssue?: (ref: EvidenceRef) => void; editScene?: (sceneId: string) => void }) {
   const [ref, setRef] = useState(evidence);
   const resolved = resolveEvidence(project, ref);
   if (!resolved) return <Modal title="引用无法解析" close={close}><p className="sg-error">这条引用未通过原文校验，请恢复完整项目备份后重试。</p></Modal>;
@@ -96,38 +98,43 @@ export function SourceModal({ project, evidence, close }: { project: Project; ev
   return <Modal title={`第 ${scene.number} 场 · ${scene.heading}`} subtitle={`${project.title} / ${version.label}${version.id !== project.activeVersionId ? ' · 历史稿本' : ' · 当前稿本'}`} close={close} wide>
     <div className="sg-toolbar"><button className="sg-secondary" disabled={index === 0} onClick={() => setRef(makeEvidence(project, version.id, version.scenes[index - 1].id))}><ArrowLeft size={15}/>上一场</button><span>第 {scene.lineStart}–{scene.lineEnd} 行 · 原文不作改写</span><button className="sg-secondary" disabled={index === version.scenes.length - 1} onClick={() => setRef(makeEvidence(project, version.id, version.scenes[index + 1].id))}>下一场<ArrowRight size={15}/></button></div>
     {version.id !== project.activeVersionId && <p className="sg-notice">这是任务引用的历史原稿，未替换成新版的同序号场次。</p>}
-    <Lines version={version} scene={scene} highlight={ref}/>
+    <EvidencePicker key={scene.id} project={project} version={version} scene={scene} initial={ref} useEvidence={newIssue} editScene={version.id === project.activeVersionId && editScene ? () => editScene(scene.id) : undefined}/>
     <div className="sg-modal-actions"><button className="sg-secondary" onClick={() => saveFile(`${project.title}-${version.label}.fountain`, version.text)}><Download size={16}/>导出此稿原文</button><button className="sg-primary" onClick={close}>完成核对</button></div>
   </Modal>;
 }
 
-export function IssueDialog({ project, issue, initialEvidence = [], review = false, close, save, openSource }: { project: Project; issue?: ReviewIssue; initialEvidence?: EvidenceRef[]; review?: boolean; close: () => void; save: (data: IssueInput) => void; openSource?: (ref: EvidenceRef) => void }) {
+export function IssueDialog({ project, issue, initialEvidence = [], review = false, close, save }: { project: Project; issue?: ReviewIssue; initialEvidence?: EvidenceRef[]; review?: boolean; close: () => void; save: (data: IssueInput) => void }) {
+  const version = getVersion(project);
+  const impact = useMemo(() => issue ? issueImpact(project, issue) : null, [project, issue]);
   const [title, setTitle] = useState(issue?.title || '');
   const [note, setNote] = useState(issue?.note || '');
   const [status, setStatus] = useState(issue?.status || 'open');
   const [evidence, setEvidence] = useState<EvidenceRef[]>(issue?.evidence || initialEvidence);
-  const [sceneId, setSceneId] = useState(getVersion(project).scenes[0]?.id || '');
+  const [sceneId, setSceneId] = useState(impact?.mappings.find(m => m.candidate)?.candidate?.sceneId || initialEvidence.find(ref => ref.versionId === version.id)?.sceneId || version.scenes[0].id);
   const [error, setError] = useState('');
-  const version = getVersion(project);
-  function add() {
-    if (!sceneId || evidence.some(e => e.versionId === version.id && e.sceneId === sceneId)) return;
-    setEvidence([...evidence, makeEvidence(project, version.id, sceneId)]);
-  }
+  const [showPicker, setShowPicker] = useState(!review && !evidence.length);
+  const scene = version.scenes.find(s => s.id === sceneId) || version.scenes[0];
+  const sameRef = (a: EvidenceRef, b: EvidenceRef) => a.versionId === b.versionId && a.sceneId === b.sceneId && a.lineStart === b.lineStart && a.lineEnd === b.lineEnd;
+  function add(ref: EvidenceRef) { if (!evidence.some(e => sameRef(e, ref))) setEvidence([...evidence, ref]); setError(''); }
   function submit() {
     try {
       if (!title.trim()) throw new Error('请给任务写一个具体标题。');
       if (status === 'resolved' && !evidence.length) throw new Error('解决任务前，请至少添加一处可核对的原文依据。');
-      if (review && !evidence.some(e => e.versionId === version.id)) throw new Error('复核当前稿本前，请补充至少一处当前版本的依据。删除场次的问题也可引用新版相邻场说明处理结果。');
+      if (review && !evidence.some(e => e.versionId === version.id)) throw new Error('请先阅读并添加当前稿本的依据，再确认复核。删除场次的问题可引用新版相邻场说明处理结果。');
       save({ title: title.trim(), note, status, evidence });
     } catch (e) { setError(e instanceof Error ? e.message : '任务未保存'); }
   }
-  return <Modal title={review ? `在「${version.label}」中重新核对` : issue ? '编辑改稿任务' : '记下一项改稿任务'} subtitle="让疑点带着出处进入修改流程" close={close}>
+  return <Modal title={review ? `在「${version.label}」中核对这项任务` : issue ? '编辑改稿任务' : '记下一项改稿任务'} subtitle={review && impact ? `${impact.label} · 阅读后确认，不自动沿用判断` : '让疑点带着出处进入修改流程'} close={close} wide={review || showPicker}>
+    {review && impact && <section className="sg-review-evidence"><p className="sg-notice">{impact.reason}</p>{impact.mappings.map((mapping, index) => {
+      const original = resolveEvidence(project, mapping.original); const candidate = mapping.candidate; const included = candidate && evidence.some(e => sameRef(e, candidate));
+      return <article className="sg-map-card" key={index}><div className="sg-toolbar"><h3>依据 {index + 1} · {mapping.reason}</h3></div><div className="sg-review-map"><div><span className="sg-overline">此前依据</span><p>{original?.version.label} · 第 {original?.scene.number} 场 · {mapping.original.lineStart}–{mapping.original.lineEnd} 行</p><pre>{mapping.original.quote}</pre></div><div><span className="sg-overline">当前稿本中的候选</span>{candidate ? <><p>{version.label} · 第 {mapping.toScene?.number} 场 · {candidate.lineStart}–{candidate.lineEnd} 行</p><pre>{candidate.quote}</pre><button className="sg-secondary" disabled={!!included} onClick={() => add(candidate)}>{included ? '已加入本次复核依据' : '采用这段新版原文'}</button><button className="sg-quiet" onClick={() => { setSceneId(candidate.sceneId); setShowPicker(true); }}>展开本场并调整行段</button></> : <><p>没有可直接沿用的唯一位置。请在下方选择当前场次，说明如何处理该变化。</p><button className="sg-secondary" onClick={() => setShowPicker(true)}>手动选择新版依据</button></>}</div></div>{candidate && mapping.original.quote !== candidate.quote && <details><summary>展开这处引用的文字差异</summary><LineDiff before={mapping.original.quote} after={candidate.quote} beforeStart={mapping.original.lineStart} afterStart={candidate.lineStart}/></details>}</article>;
+    })}{!impact.mappings.length && <p className="sg-muted">这项任务尚无可追踪的原文依据。请先选择当前稿本中的相关场次。</p>}</section>}
     <div className="sg-form"><label className="sg-field">任务标题<input value={title} onChange={e => setTitle(e.target.value)} maxLength={180} placeholder="例如：补足第5与第6场之间的钥匙交接"/></label><label className="sg-field">判断、修改方案与验收条件<textarea rows={4} value={note} onChange={e => setNote(e.target.value)} maxLength={5000} placeholder="哪里需要核对？准备怎么改？什么结果算处理完成？"/></label>
-      <label className="sg-field">处理状态<select value={status} onChange={e => setStatus(e.target.value as typeof status)}>{Object.entries(STATUS_NAMES).map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></label>
-      <div className="sg-field"><span>原文依据 · {evidence.length} 处</span><div className="sg-evidence-row">{evidence.map((ref, i) => { const v = project.versions.find(v => v.id === ref.versionId); const s = v?.scenes.find(s => s.id === ref.sceneId); return <div className="sg-ref-edit" key={`${ref.versionId}-${ref.sceneId}-${i}`}><span>{v?.label} · 第{s?.number}场 · {ref.lineStart}–{ref.lineEnd}行</span><details><summary>展开引用原文</summary><pre>{ref.quote}</pre></details><button className="sg-quiet" onClick={() => setEvidence(evidence.filter((_, index) => index !== i))}>移除此处引用</button></div>; })}</div></div>
-      <div className="sg-toolbar"><label className="sg-field">添加当前稿本场次<select value={sceneId} onChange={e => setSceneId(e.target.value)}>{version.scenes.map(s => <option value={s.id} key={s.id}>第{s.number}场 · {s.heading}</option>)}</select></label><button className="sg-secondary" onClick={add}><Plus size={16}/>添加依据</button></div>
-      {review && <p className="sg-notice">原有历史引用保留。请查看新版并补充依据，再确认本轮复核；状态不会因导入新版自动变为通过。</p>}
-      {error && <p className="sg-error" role="alert">{error}</p>}
-    </div><div className="sg-modal-actions"><button className="sg-secondary" onClick={close}>取消</button><button className="sg-primary" onClick={submit}>{review ? '确认本轮复核' : '保存任务'}</button></div>
+    <label className="sg-field">处理状态<select value={status} onChange={e => setStatus(e.target.value as typeof status)}>{Object.entries(STATUS_NAMES).map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></label>
+    <div className="sg-field"><span>已附原文依据 · {evidence.length} 处</span><div className="sg-evidence-row">{evidence.map((ref, i) => { const v = getVersion(project, ref.versionId); const s = v.scenes.find(s => s.id === ref.sceneId); return <div className="sg-ref-edit" key={`${ref.versionId}-${ref.sceneId}-${i}`}><span>{v.label} · 第{s?.number}场 · {ref.lineStart}–{ref.lineEnd}行{v.id === version.id ? ' · 当前稿本' : ' · 历史原稿'}</span><details><summary>展开引用原文</summary><pre>{ref.quote}</pre></details><button className="sg-quiet" onClick={() => setEvidence(evidence.filter((_, index) => index !== i))}>移除此处引用</button></div>; })}</div></div>
+    <button className="sg-secondary" onClick={() => setShowPicker(!showPicker)}><Plus size={16}/>{showPicker ? '收起原文选择器' : '选择场次与精确行段'}</button>
+    {showPicker && <section className="sg-inline-source"><label className="sg-field">添加当前稿本场次<select value={sceneId} onChange={e => setSceneId(e.target.value)}>{version.scenes.map(s => <option key={s.id} value={s.id}>第{s.number}场 · {s.heading}</option>)}</select></label><EvidencePicker key={scene.id} project={project} version={version} scene={scene} useEvidence={add} actionLabel="添加所选原文依据"/></section>}
+    {review && <p className="sg-muted">生成新稿不会自动解决旧任务。附上新版原文并提交后，才记录为已核对当前稿本；历史依据继续保留。</p>}{error && <p className="sg-error" role="alert">{error}</p>}</div>
+    <div className="sg-modal-actions"><button className="sg-secondary" onClick={close}>取消</button><button className="sg-primary" onClick={submit}>{review ? '确认本轮复核' : '保存任务'}</button></div>
   </Modal>;
 }

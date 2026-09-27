@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { ArrowRight, BookOpen, Check, Download, FileText, GitBranch, Plus, Search, Trash2 } from 'lucide-react';
 import { buildGraph, queryProject, diffVersions, makeEvidence, isIssueStale, setEntities, type Project, type EvidenceRef, type ReviewIssue, type LocalQueryResult, type EntityInput, type SceneChange } from './domain';
+import { EvidencePicker } from './RevisionTools';
 import { Lines, EvidenceButton, getVersion, STATUS_NAMES, shortDate, saveFile } from './components';
 
-export type ViewProps = { project: Project; update: (project: Project) => void; openSource: (ref: EvidenceRef) => void; newIssue: (refs?: EvidenceRef[]) => void; editIssue: (issue: ReviewIssue, review?: boolean) => void; importVersion: () => void };
+export type ViewProps = { project: Project; update: (project: Project) => void; openSource: (ref: EvidenceRef) => void; newIssue: (refs?: EvidenceRef[]) => void; editIssue: (issue: ReviewIssue, review?: boolean) => void; importVersion: () => void; editScene: (sceneId?: string, issue?: ReviewIssue) => void };
 
-export function ScriptView({ project, update, openSource, newIssue }: ViewProps) {
+export function ScriptView({ project, update, openSource, newIssue, editScene }: ViewProps) {
   const version = getVersion(project);
   const [tab, setTab] = useState<'script' | 'entities'>('script');
   const [selectedScene, setSelectedScene] = useState(version.scenes[0]?.id || '');
@@ -28,7 +29,7 @@ export function ScriptView({ project, update, openSource, newIssue }: ViewProps)
   return <>
     <div className="sg-view-head"><div><p className="sg-overline">01 / SCRIPT & RELATIONS</p><h2>先看原文，再建立关联。</h2><p>场次保留原始行号。人物与道具的关系来自你确认的名称和实际提及。</p></div><button className="sg-secondary" onClick={() => saveFile(`${project.title}-${version.label}.fountain`, version.text)}><Download size={16}/>导出原稿</button></div>
     <div className="sg-tabs" role="group" aria-label="剧本视图"><button className={tab === 'script' ? 'active' : ''} onClick={() => setTab('script')} aria-pressed={tab === 'script'}><BookOpen size={16}/>逐场阅读</button><button className={tab === 'entities' ? 'active' : ''} onClick={() => setTab('entities')} aria-pressed={tab === 'entities'}><GitBranch size={16}/>人物与道具 · {project.entities.length}</button></div>
-    {tab === 'script' && scene && <div className="sg-scene-layout"><aside className="sg-scene-nav"><label>查找场次<input value={filter} onChange={e => setFilter(e.target.value)} placeholder="地点或场次编号"/></label><div>{version.scenes.filter(s => `${s.number} ${s.heading}`.includes(filter.trim())).map(s => <button key={s.id} className={s.id === scene.id ? 'active' : ''} onClick={() => setSelectedScene(s.id)} aria-pressed={s.id === scene.id}><strong>{String(s.number).padStart(2, '0')}</strong><span>{s.heading}<small>{s.lineStart}–{s.lineEnd} 行</small></span></button>)}</div></aside><article className="sg-reader"><header className="sg-reader-head"><div><span className="sg-overline">{version.label} / 第 {scene.number} 场</span><h3>{scene.heading}</h3></div><button className="sg-primary" onClick={() => newIssue([makeEvidence(project, version.id, scene.id)])}><Plus size={16}/>记改稿任务</button></header><Lines version={version} scene={scene}/><div className="sg-reader-foot"><span>原文第 {scene.lineStart}–{scene.lineEnd} 行</span><div className="sg-actions"><button className="sg-quiet" disabled={scene.number === 1} onClick={() => setSelectedScene(version.scenes[scene.number - 2].id)}>上一场</button><button className="sg-quiet" disabled={scene.number === version.scenes.length} onClick={() => setSelectedScene(version.scenes[scene.number].id)}>下一场</button></div></div></article></div>}
+    {tab === 'script' && scene && <div className="sg-scene-layout"><aside className="sg-scene-nav"><label>查找场次<input value={filter} onChange={e => setFilter(e.target.value)} placeholder="地点或场次编号"/></label><div>{version.scenes.filter(s => `${s.number} ${s.heading}`.includes(filter.trim())).map(s => <button key={s.id} className={s.id === scene.id ? 'active' : ''} onClick={() => setSelectedScene(s.id)} aria-pressed={s.id === scene.id}><strong>{String(s.number).padStart(2, '0')}</strong><span>{s.heading}<small>{s.lineStart}–{s.lineEnd} 行</small></span></button>)}</div></aside><article className="sg-reader"><header className="sg-reader-head"><div><span className="sg-overline">{version.label} / 第 {scene.number} 场</span><h3>{scene.heading}</h3></div><button className="sg-secondary" onClick={() => editScene(scene.id)}>修改这一场<ArrowRight size={16}/></button></header><EvidencePicker key={scene.id} project={project} version={version} scene={scene} useEvidence={ref => newIssue([ref])} actionLabel="记改稿任务"/><div className="sg-reader-foot"><span>原文第 {scene.lineStart}–{scene.lineEnd} 行</span><div className="sg-actions"><button className="sg-quiet" disabled={scene.number === 1} onClick={() => setSelectedScene(version.scenes[scene.number - 2].id)}>上一场</button><button className="sg-quiet" disabled={scene.number === version.scenes.length} onClick={() => setSelectedScene(version.scenes[scene.number].id)}>下一场</button></div></div></article></div>}
     {tab === 'entities' && <>
       <p className="sg-notice">确认索引后，检索可沿「人物／道具 → 提及场次」补充跨场材料。共同出现不等于人物有关系，提及道具不等于持有。</p>
       <div className="sg-entity-layout"><aside className="sg-entity-list">{!project.entities.length && <p className="sg-muted">还没有索引对象，可在下方添加。</p>}{project.entities.map(e => <button key={e.id} className={e.id === entity?.id ? 'active' : ''} onClick={() => setSelectedEntity(e.id)}><span>{e.name}<small>{e.kind === 'character' ? '人物' : '道具'} · {e.confirmed ? '已确认' : '待确认'}</small></span><strong>{graph.edges.filter(edge => edge.entityId === e.id).length}</strong></button>)}</aside>
@@ -69,44 +70,4 @@ export function SearchView({ project, openSource, newIssue }: ViewProps) {
   </>;
 }
 
-export function IssuesView({ project, openSource, newIssue, editIssue }: ViewProps) {
-  const [filter, setFilter] = useState('all');
-  const [query, setQuery] = useState('');
-  const issues = project.issues.filter(i => (filter === 'all' || (filter === 'stale' ? isIssueStale(project, i) : i.status === filter)) && `${i.title} ${i.note}`.includes(query.trim()));
-  function exportTasks() {
-    const output = [`# ${project.title} · 改稿任务`, `当前稿本：${getVersion(project).label}`, '以下为项目内人工审阅记录，不是自动生成的剧本结论。', '', ...project.issues.flatMap(i => [`## ${i.title}`, `状态：${STATUS_NAMES[i.status]}${isIssueStale(project, i) ? ' / 当前稿本待复核' : ' / 已核对当前稿本'}`, i.note || '无备注', ...i.evidence.flatMap(ref => { const v = getVersion(project, ref.versionId); const s = v.scenes.find(s => s.id === ref.sceneId)!; return [`出处：${v.label} 第${s.number}场 ${ref.lineStart}–${ref.lineEnd}行`, ref.quote, '']; }), ''])].join('\n');
-    saveFile(`${project.title}-改稿任务.md`, output, 'text/markdown;charset=utf-8');
-  }
-  return <>
-    <div className="sg-view-head"><div><p className="sg-overline">03 / REVISION TASKS</p><h2>把疑点变成可以完成的修改。</h2><p>每项任务保留出处、处理方式和复核状态。导入新版后，旧任务会等待你再次确认。</p></div><div className="sg-actions"><button className="sg-secondary" onClick={exportTasks} disabled={!project.issues.length}><Download size={16}/>导出全部任务</button><button className="sg-primary" onClick={() => newIssue()}><Plus size={16}/>新建任务</button></div></div>
-    <div className="sg-task-tools"><label className="sg-field">搜索任务<input value={query} onChange={e => setQuery(e.target.value)} placeholder="标题或修改方案"/></label><label className="sg-field">任务状态<select value={filter} onChange={e => setFilter(e.target.value)}><option value="all">全部任务 ({project.issues.length})</option><option value="stale">当前稿本待复核</option>{Object.entries(STATUS_NAMES).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select></label></div>
-    {!issues.length && <div className="sg-empty"><Check size={28}/><h3>{project.issues.length ? '当前筛选下没有任务' : '从一个真实疑点开始'}</h3><p>{project.issues.length ? '可以切回全部状态，继续查看已记录的修改。' : '读到不确定的设定时，在原文中创建任务；也可以先记待办，再补充依据。'}</p><button className="sg-secondary" onClick={() => project.issues.length ? (setFilter('all'), setQuery('')) : newIssue()}>{project.issues.length ? '查看全部任务' : '记第一项任务'}</button></div>}
-    <div className="sg-issue-list">{issues.map(issue => <article className={`sg-issue ${isIssueStale(project, issue) ? 'sg-stale' : ''}`} key={issue.id}><div className="sg-issue-heading"><div className="sg-actions"><span className={`sg-status ${issue.status}`}>{STATUS_NAMES[issue.status]}</span>{isIssueStale(project, issue) && <span className="sg-badge">当前稿本待复核</span>}</div><small>{shortDate(issue.updatedAt)}</small></div><h3>{issue.title}</h3><p className="sg-issue-note">{issue.note || '尚未填写修改方案。'}</p><div className="sg-evidence-row">{issue.evidence.map((ref, index) => <EvidenceButton key={index} project={project} evidence={ref} open={openSource}/>)}{!issue.evidence.length && <span className="sg-muted">还没有原文依据，解决前请补充。</span>}</div><div className="sg-issue-actions"><button className="sg-secondary" onClick={() => editIssue(issue)}>编辑任务</button><button className="sg-primary" onClick={() => editIssue(issue, true)}>{isIssueStale(project, issue) ? '核对当前稿本' : '更新复核结论'}<ArrowRight size={15}/></button></div></article>)}</div>
-  </>;
-}
-
-export function VersionsView({ project, openSource, editIssue, importVersion }: ViewProps) {
-  const [fromId, setFromId] = useState(project.versions.at(-2)?.id || project.versions[0].id);
-  const [toId, setToId] = useState(project.activeVersionId);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [showUnchanged, setShowUnchanged] = useState(false);
-  const diff = useMemo(() => fromId !== toId ? diffVersions(project, fromId, toId) : null, [project, fromId, toId]);
-  const change = diff?.changes.find(c => c.id === selected);
-  const from = getVersion(project, fromId), to = getVersion(project, toId);
-  const stale = project.issues.filter(i => isIssueStale(project, i));
-  const changeLabel = (c: SceneChange) => c.kind === 'modified' ? '内容修改' : c.kind === 'added' ? '新增' : c.kind === 'removed' ? '删除' : c.kind === 'ambiguous' ? '对应待确认' : c.moved ? '顺序变化' : '内容未变';
-  return <>
-    <div className="sg-view-head"><div><p className="sg-overline">04 / VERSION REVIEW</p><h2>看清改了哪里，再确认任务是否解决。</h2><p>原稿始终保留。场次按正文与唯一场头对照；相似或重复场次会留给你确认。</p></div><button className="sg-primary" onClick={importVersion}><FileText size={17}/>导入／编辑新版</button></div>
-    <div className="sg-version-list">{project.versions.map((version, i) => <button key={version.id} className={version.id === toId ? 'active' : ''} onClick={() => { setToId(version.id); setSelected(null); }}><span>V{i + 1}</span><strong>{version.label}</strong><small>{version.scenes.length} 场 · {shortDate(version.createdAt)}{version.id === project.activeVersionId ? ' · 当前稿本' : ''}</small></button>)}</div>
-    {project.versions.length < 2 ? <div className="sg-empty"><GitBranch size={28}/><h3>下一稿，不覆盖这一稿</h3><p>导入修订文本或直接编辑一份新稿，预览变化后再确认。旧任务会保留最初的原文依据。</p><button className="sg-primary" onClick={importVersion}>开始一轮改稿 <ArrowRight size={16}/></button></div> : <>
-      <div className="sg-task-tools"><label className="sg-field">对照原稿<select value={fromId} onChange={e => { setFromId(e.target.value); setSelected(null); }}>{project.versions.map(v => <option key={v.id} value={v.id}>{v.label}</option>)}</select></label><ArrowRight size={18}/><label className="sg-field">比较稿本<select value={toId} onChange={e => { setToId(e.target.value); setSelected(null); }}>{project.versions.map(v => <option key={v.id} value={v.id}>{v.label}</option>)}</select></label></div>
-      {!diff && <p className="sg-notice">请选择两个不同的稿本进行比较。</p>}
-      {diff && <><div className="sg-diff-summary"><span><strong>{diff.counts.modified}</strong> 修改</span><span><strong>{diff.counts.added}</strong> 新增</span><span><strong>{diff.counts.removed}</strong> 删除</span><span><strong>{diff.counts.moved}</strong> 调序</span><span><strong>{diff.counts.ambiguous}</strong> 对应待确认</span></div><label className="sg-check-row"><input type="checkbox" checked={showUnchanged} onChange={e => setShowUnchanged(e.target.checked)}/>同时显示内容未变的场次</label>
-        <div className="sg-change-list">{diff.changes.filter(c => showUnchanged || c.kind !== 'unchanged' || c.moved).map(c => <button className={`sg-change ${c.id === selected ? 'active' : ''}`} key={c.id} onClick={() => setSelected(c.id)}><span className={`sg-status ${c.kind}`}>{changeLabel(c)}</span><span>{c.summary}</span><ArrowRight size={15}/></button>)}</div>
-        {change && <div className="sg-compare-pair">{([{ version: from, ids: change.fromSceneIds, label: '原稿' }, { version: to, ids: change.toSceneIds, label: '比较稿' }]).map(side => <article className="sg-compare-column" key={side.label}><h3>{side.label} · {side.version.label}</h3>{side.ids.length ? side.ids.map(id => { const s = side.version.scenes.find(s => s.id === id)!; return <div key={id}><h4>第 {s.number} 场 · {s.heading}</h4><p className="sg-muted">{s.lineStart}–{s.lineEnd} 行</p><pre>{s.text}</pre><button className="sg-secondary" onClick={() => openSource(makeEvidence(project, side.version.id, id))}>打开此版原文</button></div>; }) : <p className="sg-empty">此稿没有对应场次</p>}</article>)}</div>}
-      </>}
-    </>}
-    {stale.length > 0 && <section className="sg-recheck"><h3>{stale.length} 项任务等待当前稿本复核</h3><p>导入新版不会自动判定旧问题已解决。核对新材料后再记录结论。</p>{stale.map(issue => <article key={issue.id}><div><strong>{issue.title}</strong><span className="sg-muted">原处理状态：{STATUS_NAMES[issue.status]}</span></div><button className="sg-primary" onClick={() => editIssue(issue, true)}>开始复核</button></article>)}</section>}
-  </>;
-}
-
+export { IssuesView, VersionsView } from './ReviewViews';

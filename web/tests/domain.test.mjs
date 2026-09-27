@@ -179,7 +179,7 @@ test('backup round-trip sanitizes unknown fields and restored copy preserves all
   p = createIssue(p, { title: '复核钥匙', evidence: [makeEvidence(p, p.activeVersionId, p.versions[0].scenes[0].id)] }, NOW + 2);
   const raw = jsonCopy(p);
   raw.injected = 'drop me'; raw.versions[0].injected = true; raw.issues[0].evidence[0].url = 'https://example.invalid';
-  const wrapped = JSON.stringify({ format: 'scriptgraph-project', schemaVersion: 2, project: raw });
+  const wrapped = JSON.stringify({ format: 'scriptgraph-project', schemaVersion: 3, project: raw });
   const loaded = validateBackup(wrapped);
   assert.equal(loaded.ok, true, loaded.errors?.join(' '));
   assert.deepEqual(loaded.project, p);

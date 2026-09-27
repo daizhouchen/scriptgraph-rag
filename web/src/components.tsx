@@ -1,6 +1,7 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { X, Download, FileText } from 'lucide-react';
 import type { EvidenceRef, Project, ScriptVersion, Scene } from './domain';
+import { serializeBackup } from './domain';
 
 export const STATUS_NAMES = { open: '待处理', working: '修改中', resolved: '已解决', dismissed: '保留设定' } as const;
 export function getVersion(project: Project, id = project.activeVersionId) { return project.versions.find(v => v.id === id)!; }
@@ -11,7 +12,7 @@ export function saveFile(name: string, text: string, type = 'text/plain;charset=
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 export function backupProject(project: Project) {
-  saveFile(`${project.title.replace(/[\\/:*?"<>|]/g, '_')}-ScriptGraph.json`, JSON.stringify({ format: 'scriptgraph-project', schemaVersion: 2, project }, null, 2), 'application/json');
+  saveFile(`${project.title.replace(/[\\/:*?"<>|]/g, '_')}-ScriptGraph.json`, serializeBackup(project), 'application/json');
 }
 export function Modal({ title, subtitle, children, close, wide = false }: { title: string; subtitle?: string; children: ReactNode; close: () => void; wide?: boolean }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -21,10 +22,10 @@ export function Modal({ title, subtitle, children, close, wide = false }: { titl
     <div className="sg-modal-body">{children}</div>
   </dialog>;
 }
-export function Lines({ version, scene, highlight }: { version: ScriptVersion; scene: Scene; highlight?: EvidenceRef }) {
+export function Lines({ version, scene, highlight, selectLine }: { version: ScriptVersion; scene: Scene; highlight?: EvidenceRef; selectLine?: (line: number, extend: boolean) => void }) {
   return <div className="sg-lines" tabIndex={0} aria-label={`第${scene.number}场原文`}><ol>{version.text.split('\n').slice(scene.lineStart - 1, scene.lineEnd).map((line, i) => {
     const number = scene.lineStart + i;
-    return <li key={number} className={highlight && number >= highlight.lineStart && number <= highlight.lineEnd ? 'sg-highlight' : ''}><span aria-hidden="true">{number}</span><code>{line || ' '}</code></li>;
+    return <li key={number} className={highlight && number >= highlight.lineStart && number <= highlight.lineEnd ? 'sg-highlight' : ''}>{selectLine ? <button className="sg-line-pick" aria-label={`选择第 ${number} 行，按住 Shift 扩展范围`} onClick={e => selectLine(number, e.shiftKey)}>{number}</button> : <span aria-hidden="true">{number}</span>}<code>{line || ' '}</code></li>;
   })}</ol></div>;
 }
 export function EvidenceButton({ project, evidence, open }: { project: Project; evidence: EvidenceRef; open: (ref: EvidenceRef) => void }) {
@@ -32,4 +33,7 @@ export function EvidenceButton({ project, evidence, open }: { project: Project; 
   const scene = version?.scenes.find(s => s.id === evidence.sceneId);
   return <button className="sg-evidence" onClick={() => open(evidence)}><FileText size={15}/><span>{version?.label || '旧版本'} · 第{scene?.number || '?'}场<span className="sg-evidence-range">原文 {evidence.lineStart}–{evidence.lineEnd} 行</span></span></button>;
 }
-export function BackupButton({ project }: { project: Project }) { return <button className="sg-secondary" onClick={() => backupProject(project)}><Download size={16}/>备份项目</button>; }
+export function BackupButton({ project }: { project: Project }) {
+  const [error, setError] = useState('');
+  return <><button className="sg-secondary" onClick={() => { try { backupProject(project); setError(''); } catch (e) { setError(e instanceof Error ? e.message : '备份未生成，请重试。'); } }}><Download size={16}/>备份项目</button>{error && <span className="sg-error" role="alert">{error}</span>}</>;
+}
